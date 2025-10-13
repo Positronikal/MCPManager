@@ -1,0 +1,101 @@
+# AI related
+.gemini/
+CLAUDE.md
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+*.xml
+
+# Documentation build artifacts
+docs/_build/
+docs/build/
+*.pdf~
+
+# Editor files
+*~
+.#*
+\#*#
+.*.swp
+.*.swo
+
+# Executable directories/files
+bin/
+#*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Linker output
+*.ilk
+*.map
+*.exp
+
+# Mac trash
+.DS_Store
+.DS_Store?
+._*
+.fseventsd
+.Spotlight-V100
+.Trashes
+
+# Object directories/files
+obj/
+*.o
+*.ko
+*.obj
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Prerequisites
+ref/
+*.d
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Temporary files
+etc/
+*.tmp
+*.bak
+*.log
+
+# Web-related
+.cache
+dist
+node_modules
+
+# Windows trash
+*.ini
+ehthumbs.db
+System Volume Information/
+Thumbs.db
