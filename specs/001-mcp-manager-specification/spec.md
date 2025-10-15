@@ -39,6 +39,17 @@
 
 ---
 
+## Clarifications
+
+### Session 2025-10-15
+- Q: When client configuration files (like Claude Desktop or Cursor configs) are modified externally while MCP Manager is running, how should the system handle discovery updates? → A: Hybrid approach - detect changes and notify user with option to refresh
+- Q: Should multiple instances of MCP Manager be allowed to run simultaneously on the same machine? → A: No, enforce single-instance - show existing window if user tries to launch again
+- Q: When a server is started via MCP Manager's Start button and the server process fails during startup (crashes or exits immediately), how should the system represent this state? → A: Show temporary "starting" state, then error state if startup fails
+- Q: When a server crashes unexpectedly during operation (not during startup), what log retention policy should apply? → A: Keep last 1000 log entries per server
+- Q: What is the maximum number of MCP servers the system should be designed to handle efficiently? → A: Up to 50 servers (power user / team environment)
+
+---
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### Primary User Story
@@ -68,13 +79,13 @@ As a developer or system administrator working with multiple MCP servers, I need
 
 - How does the system handle a server crash during operation? The status should automatically update to show the error state (yellow) and relevant crash logs should appear in the log viewer.
 
-- What happens when multiple instances of MCP Manager are running? [NEEDS CLARIFICATION: Should multiple instances be allowed, or should the application enforce single-instance operation?]
+- What happens when the user attempts to launch MCP Manager while it is already running? The system should enforce single-instance operation by detecting the existing instance and bringing its window to the foreground instead of launching a duplicate process.
 
 - How does the system handle servers that take a long time to start? The UI should remain responsive and show progress indicators while waiting for server startup.
 
 - What happens when configuration files contain invalid syntax? Validation should occur before applying changes, with clear error messages identifying the problem.
 
-- How does the system behave when client configuration files are modified externally while MCP Manager is running? [NEEDS CLARIFICATION: Should the system auto-refresh discovery results, or require manual refresh?]
+- How does the system behave when client configuration files are modified externally while MCP Manager is running? The system should detect file changes and display a notification to the user with an option to refresh the discovery results, allowing the user to decide when to incorporate external changes.
 
 - What happens when the user attempts to start a server that is already running? The system should detect the existing process and either connect to it or warn the user.
 
@@ -90,9 +101,10 @@ As a developer or system administrator working with multiple MCP servers, I need
 - **FR-001**: System MUST automatically scan common installation locations to discover installed MCP servers on application launch.
 - **FR-002**: System MUST read MCP client configuration files to identify configured servers without modifying those files.
 - **FR-003**: System MUST display discovered servers in a tabular format showing status, name, version, and available capabilities/tools.
-- **FR-004**: System MUST use visual color coding for server status: green for running, red for stopped, yellow for error states.
+- **FR-004**: System MUST use visual color coding for server status: green for running, red for stopped, yellow for error states, and blue or gray for transitional "starting" state.
 - **FR-005**: System MUST update server status in real-time without requiring manual page refresh.
 - **FR-006**: System MUST cache discovery results and provide a manual refresh capability.
+- **FR-050**: System MUST monitor MCP client configuration files for external changes and display a notification when changes are detected, providing the user with an option to refresh discovery results.
 
 #### Server Lifecycle Control
 - **FR-007**: Users MUST be able to start a stopped server via a Start button in the dashboard.
@@ -102,6 +114,7 @@ As a developer or system administrator working with multiple MCP servers, I need
 - **FR-011**: System MUST provide immediate visual feedback when lifecycle operations are initiated.
 - **FR-012**: System MUST display clear error messages when lifecycle operations fail, identifying the specific failure reason.
 - **FR-013**: System MUST provide manual override controls for troubleshooting scenarios.
+- **FR-052**: System MUST display a temporary "starting" state when a server launch is initiated, then transition to either "running" (green) if successful or "error" (yellow) if the startup fails, with failure details displayed in the log viewer.
 
 #### Configuration Management
 - **FR-014**: Users MUST be able to open a configuration editor for any server via a Config button.
@@ -119,6 +132,7 @@ As a developer or system administrator working with multiple MCP servers, I need
 - **FR-024**: Users MUST be able to view detailed server-specific logs via a Logs button for each server.
 - **FR-025**: System MUST display health metrics for running servers including uptime and memory usage.
 - **FR-026**: System MUST display request count for servers when this information is available.
+- **FR-053**: System MUST retain the last 1000 log entries per server, automatically discarding older entries when the limit is exceeded to manage memory usage while preserving recent operational history including crash logs.
 
 #### Dependency Management
 - **FR-027**: System MUST check and display server prerequisites including required libraries, tools, and environment setup.
@@ -139,6 +153,8 @@ As a developer or system administrator working with multiple MCP servers, I need
 - **FR-038**: System MUST maintain UI responsiveness with no blocking operations on the main thread.
 - **FR-039**: System MUST consume less than 100MB of memory when idle.
 - **FR-040**: System MUST provide real-time updates without constant polling that degrades performance.
+- **FR-051**: System MUST enforce single-instance operation - when a user attempts to launch the application while it is already running, the system must detect the existing instance and bring its window to the foreground instead of creating a duplicate process.
+- **FR-054**: System MUST efficiently handle up to 50 MCP servers simultaneously without performance degradation, maintaining responsive UI and real-time status updates across all managed servers.
 
 #### Data Persistence
 - **FR-041**: System MUST persist all application state to disk to survive application restarts.
@@ -166,13 +182,13 @@ The following capabilities are explicitly excluded from this feature:
 
 ### Key Entities *(include if feature involves data)*
 
-- **MCP Server**: Represents an installed Model Context Protocol server with attributes including name, version, installation path, current status (running/stopped/error), process ID when running, available capabilities/tools, configuration parameters, and dependency requirements.
+- **MCP Server**: Represents an installed Model Context Protocol server with attributes including name, version, installation path, current status (running/stopped/error/starting), process ID when running, available capabilities/tools, configuration parameters, and dependency requirements.
 
-- **Server Status**: Represents the real-time operational state of a server including status type (running/stopped/error), uptime duration, memory usage, request count, and last status change timestamp.
+- **Server Status**: Represents the real-time operational state of a server including status type (running/stopped/error/starting), uptime duration, memory usage, request count, and last status change timestamp.
 
 - **Server Configuration**: Represents editable configuration data for a server including server-specific parameters, environment variables, command-line arguments, and configuration file path.
 
-- **Log Entry**: Represents a single log message with attributes including timestamp, severity level (info/success/warning/error), source server, and message text.
+- **Log Entry**: Represents a single log message with attributes including timestamp, severity level (info/success/warning/error), source server, and message text. Maximum of 1000 entries retained per server on a rolling basis.
 
 - **Dependency**: Represents a required prerequisite for a server including dependency name, type (library/tool/environment), required version, current installation status, and installation instructions when missing.
 
@@ -190,7 +206,7 @@ The following capabilities are explicitly excluded from this feature:
 - [x] All mandatory sections completed
 
 ### Requirement Completeness
-- [ ] No [NEEDS CLARIFICATION] markers remain (2 clarifications needed)
+- [x] No [NEEDS CLARIFICATION] markers remain (all clarifications resolved)
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Scope is clearly bounded
@@ -203,20 +219,18 @@ The following capabilities are explicitly excluded from this feature:
 
 - [x] User description parsed
 - [x] Key concepts extracted
-- [x] Ambiguities marked (2 clarifications identified)
+- [x] Ambiguities marked (5 clarifications identified)
 - [x] User scenarios defined
-- [x] Requirements generated (49 functional requirements)
+- [x] Requirements generated (54 functional requirements)
 - [x] Entities identified (6 key entities)
-- [ ] Review checklist passed (pending clarifications)
+- [x] Review checklist passed (all clarifications resolved)
 
 ---
 
 ## Notes
 
-**Clarifications Needed**:
-1. Should multiple instances of MCP Manager be allowed to run simultaneously, or should single-instance enforcement be implemented?
-2. When client configuration files are modified externally, should the system automatically refresh discovery results or require manual refresh by the user?
-
 **Design Reference**: The visual design should follow the mockup provided in `etc/XAMPP-Style UI Mockup.html` showing a dark-themed interface with server table, action buttons, sidebar utilities, and bottom log viewer.
 
 **Constitutional Alignment**: This feature aligns with the Unix Philosophy principle of "do one thing well" - managing MCP servers without attempting to be an MCP client or replace existing development tools. It follows the API-first architecture requirement and emphasizes simplicity and modularity.
+
+**Performance & Scale Target**: System is designed to efficiently manage up to 50 MCP servers simultaneously, supporting power users and team environments while maintaining responsive UI and real-time monitoring capabilities.
