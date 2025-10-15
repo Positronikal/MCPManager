@@ -99,3 +99,16 @@ node_modules
 ehthumbs.db
 System Volume Information/
 Thumbs.db
+
+# Go specific
+*.exe
+*.test
+vendor/
+go.work
+go.work.sum
+
+# Wails specific
+build/
+frontend/dist/
+frontend/node_modules/
+wails_*_log.txt
