@@ -38,3 +38,10 @@ type SingleInstance interface {
 	// Release releases the single instance lock
 	Release() error
 }
+
+// ProcessInfo provides information about running processes
+type ProcessInfo interface {
+	// GetMemoryUsage returns the memory usage of a process in bytes
+	// Returns 0 if the process is not found or memory cannot be determined
+	GetMemoryUsage(pid int) (uint64, error)
+}
