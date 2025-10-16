@@ -229,7 +229,7 @@ func TestGetLogs_NonExistentServer(t *testing.T) {
 	}
 }
 
-func TestFilterLogs(t *testing.T) {
+func TestFilterLogsBySeverityOld(t *testing.T) {
 	ms := NewMonitoringService(nil)
 	serverID := "test-server"
 
@@ -241,19 +241,19 @@ func TestFilterLogs(t *testing.T) {
 	ms.addLog(serverID, *models.NewLogEntry(models.LogError, serverID, "Error 2"))
 
 	// Filter by error
-	errorLogs := ms.FilterLogs(serverID, models.LogError)
+	errorLogs := ms.FilterLogsBySeverityOld(serverID, models.LogError)
 	if len(errorLogs) != 2 {
 		t.Errorf("Expected 2 error logs, got %d", len(errorLogs))
 	}
 
 	// Filter by info
-	infoLogs := ms.FilterLogs(serverID, models.LogInfo)
+	infoLogs := ms.FilterLogsBySeverityOld(serverID, models.LogInfo)
 	if len(infoLogs) != 2 {
 		t.Errorf("Expected 2 info logs, got %d", len(infoLogs))
 	}
 
 	// Filter by warning
-	warningLogs := ms.FilterLogs(serverID, models.LogWarning)
+	warningLogs := ms.FilterLogsBySeverityOld(serverID, models.LogWarning)
 	if len(warningLogs) != 1 {
 		t.Errorf("Expected 1 warning log, got %d", len(warningLogs))
 	}

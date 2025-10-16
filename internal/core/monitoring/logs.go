@@ -132,8 +132,9 @@ func (ms *MonitoringService) GetAllLogs(serverID string) []models.LogEntry {
 	return buffer.GetAll()
 }
 
-// FilterLogs retrieves logs for a specific server filtered by severity
-func (ms *MonitoringService) FilterLogs(serverID string, severity models.LogSeverity) []models.LogEntry {
+// FilterLogsBySeverityOld retrieves logs for a specific server filtered by severity
+// Deprecated: Use FilterLogs with LogFilter instead (defined in filter.go)
+func (ms *MonitoringService) FilterLogsBySeverityOld(serverID string, severity models.LogSeverity) []models.LogEntry {
 	ms.mu.RLock()
 	defer ms.mu.RUnlock()
 
