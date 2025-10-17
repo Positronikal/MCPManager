@@ -1,7 +1,28 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(test:*)",
+      "Bash(for file in storage.go autosave.go)",
+      "Bash(do test -f internal/storage/$file)",
+      "Bash(echo:*)",
+      "Bash(done)",
+      "Bash(for file in clientconfig.go filesystem.go processes.go discovery.go filewatcher.go)",
+      "Bash(do test -f internal/core/discovery/$file)",
+      "Bash(for file in start.go stop.go restart.go monitor.go)",
+      "Bash(do test -f internal/core/lifecycle/$file)",
+      "Bash(for file in logs.go metrics.go filter.go)",
+      "Bash(do test -f internal/core/monitoring/$file)",
+      "Bash(for file in check.go updates.go)",
+      "Bash(do test -f internal/core/dependencies/$file)",
+      "Bash(for file in discovery_test.go lifecycle_test.go)",
+      "Bash(do test -f tests/integration/$file)",
+      "Bash(for file in servers_list_test.go servers_discover_test.go servers_get_test.go lifecycle_test.go config_test.go monitoring_test.go dependencies_test.go appstate_test.go)",
+      "Bash(do test -f tests/contract/$file)",
+      "Bash(for file in discovery.go lifecycle.go config.go monitoring.go dependencies.go appstate.go events.go middleware.go router.go)",
+      "Bash(do test -f internal/api/$file)",
+      "Bash(go test:*)",
+      "Bash(go mod tidy:*)"
     ],
     "deny": [],
     "ask": []
