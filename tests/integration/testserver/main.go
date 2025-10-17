@@ -26,7 +26,7 @@ func main() {
 		fmt.Fprintf(w, "Test MCP Server")
 	})
 
-	addr := ":" + port
+	addr := "127.0.0.1:" + port
 	log.Printf("Test server starting on port %s (PID: %d)", port, os.Getpid())
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
