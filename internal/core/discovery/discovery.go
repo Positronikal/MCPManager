@@ -139,6 +139,19 @@ func (ds *DiscoveryService) GetCachedServers() []models.MCPServer {
 	return servers
 }
 
+// GetServers returns the cached list of discovered servers and the last discovery time
+func (ds *DiscoveryService) GetServers() ([]models.MCPServer, time.Time, error) {
+	ds.mu.RLock()
+	defer ds.mu.RUnlock()
+
+	var servers []models.MCPServer
+	for _, server := range ds.cachedServers {
+		servers = append(servers, *server)
+	}
+
+	return servers, ds.lastDiscovery, nil
+}
+
 // GetServerByID returns a specific server from the cache
 func (ds *DiscoveryService) GetServerByID(serverID string) (*models.MCPServer, bool) {
 	ds.mu.RLock()
