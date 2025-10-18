@@ -2,9 +2,28 @@
   import { servers, filteredServers, selectedServerId, addNotification } from '../stores/stores';
   import { api } from '../services/api';
   import type { MCPServer } from '../stores/stores';
+  import ConfigurationEditor from './ConfigurationEditor.svelte';
+  import { onMount } from 'svelte';
 
   // Loading states for individual servers
   let loadingServers = new Map<string, string>(); // serverId -> action type
+
+  // Configuration editor state
+  let showConfigEditor = false;
+  let configEditorServerId: string | null = null;
+  let configEditorServerName: string | null = null;
+  
+  // Fetch servers on component mount
+  onMount(async () => {
+    try {
+      const response = await api.discovery.listServers();
+      servers.set(response.servers);
+      addNotification('success', `Found ${response.count} server${response.count !== 1 ? 's' : ''}`);
+    } catch (error) {
+      console.error('Failed to fetch servers:', error);
+      addNotification('error', `Failed to load servers: ${error.message}`);
+    }
+  });
 
   // Handle Start server action
   async function handleStart(server: MCPServer) {
@@ -60,8 +79,16 @@
   // Handle opening configuration panel
   function openConfig(server: MCPServer) {
     selectedServerId.set(server.id);
-    addNotification('info', `Opening configuration for ${server.name}`);
-    // TODO: T-E010 will implement ConfigurationEditor
+    configEditorServerId = server.id;
+    configEditorServerName = server.name;
+    showConfigEditor = true;
+  }
+
+  // Handle closing configuration editor
+  function closeConfigEditor() {
+    showConfigEditor = false;
+    configEditorServerId = null;
+    configEditorServerName = null;
   }
 
   // Handle opening logs panel
@@ -259,6 +286,15 @@
     </div>
   {/if}
 </div>
+
+<!-- Configuration Editor Modal -->
+{#if showConfigEditor && configEditorServerId && configEditorServerName}
+  <ConfigurationEditor
+    serverId={configEditorServerId}
+    serverName={configEditorServerName}
+    onClose={closeConfigEditor}
+  />
+{/if}
 
 <style>
   .server-table-container {

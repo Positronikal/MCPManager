@@ -26,14 +26,20 @@ export interface ServerStatus {
 }
 
 export interface ServerConfiguration {
-  command: string;
-  args: string[];
-  env: Record<string, string>;
+  environmentVariables?: Record<string, string>;
+  commandLineArguments?: string[];
+  workingDirectory?: string;
   autoStart: boolean;
-  restartOnFailure: boolean;
-  maxRestarts: number;
-  restartDelay: number;
+  restartOnCrash: boolean;
+  maxRestartAttempts: number;
+  startupTimeout: number;
+  shutdownTimeout: number;
+  healthCheckInterval?: number;
+  healthCheckEndpoint?: string;
 }
+
+// Type alias for backward compatibility
+export type LogSeverity = 'info' | 'success' | 'warning' | 'error';
 
 export interface Dependency {
   name: string;
@@ -46,7 +52,7 @@ export interface Dependency {
 
 export interface LogEntry {
   timestamp: string;
-  severity: 'info' | 'success' | 'warning' | 'error';
+  severity: LogSeverity;
   message: string;
   serverId: string;
 }

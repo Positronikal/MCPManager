@@ -16,9 +16,9 @@ const SSE_URL = 'http://localhost:8080/api/v1/events';
 
 export interface ServerEvent {
   id: string;
-  type: 'server_discovered' | 'server_status_changed' | 'server_log_entry' | 'server_config_changed' | 'server_metrics_updated';
+  type: 'server.discovered' | 'server.status.changed' | 'server.log.entry' | 'config.file.changed' | 'server.metrics.updated';
   timestamp: string;
-  metadata: Record<string, string>;
+  metadata?: Record<string, string>;
   data?: any;
 }
 
@@ -95,24 +95,24 @@ export class SSEClient {
       }
     };
 
-    // Listen for specific event types
-    this.eventSource.addEventListener('server_discovered', (event: MessageEvent) => {
+    // Listen for specific event types (using dot notation from backend)
+    this.eventSource.addEventListener('server.discovered', (event: MessageEvent) => {
       this.handleEvent(event);
     });
 
-    this.eventSource.addEventListener('server_status_changed', (event: MessageEvent) => {
+    this.eventSource.addEventListener('server.status.changed', (event: MessageEvent) => {
       this.handleEvent(event);
     });
 
-    this.eventSource.addEventListener('server_log_entry', (event: MessageEvent) => {
+    this.eventSource.addEventListener('server.log.entry', (event: MessageEvent) => {
       this.handleEvent(event);
     });
 
-    this.eventSource.addEventListener('server_config_changed', (event: MessageEvent) => {
+    this.eventSource.addEventListener('config.file.changed', (event: MessageEvent) => {
       this.handleEvent(event);
     });
 
-    this.eventSource.addEventListener('server_metrics_updated', (event: MessageEvent) => {
+    this.eventSource.addEventListener('server.metrics.updated', (event: MessageEvent) => {
       this.handleEvent(event);
     });
 
@@ -140,19 +140,19 @@ export class SSEClient {
 
       // Route event to appropriate handler
       switch (eventData.type) {
-        case 'server_discovered':
+        case 'server.discovered':
           this.handleServerDiscovered(eventData);
           break;
-        case 'server_status_changed':
+        case 'server.status.changed':
           this.handleServerStatusChanged(eventData);
           break;
-        case 'server_log_entry':
+        case 'server.log.entry':
           this.handleServerLogEntry(eventData);
           break;
-        case 'server_config_changed':
+        case 'config.file.changed':
           this.handleServerConfigChanged(eventData);
           break;
-        case 'server_metrics_updated':
+        case 'server.metrics.updated':
           this.handleServerMetricsUpdated(eventData);
           break;
         default:
@@ -167,10 +167,13 @@ export class SSEClient {
    * Handle server discovered event
    */
   private handleServerDiscovered(event: ServerEvent) {
-    if (event.data && event.data.server) {
-      const server: MCPServer = event.data.server;
-      updateServer(server);
-      addNotification('info', `Server discovered: ${server.name}`);
+    // Backend sends: { type: "server.discovered", data: { serverID, name, source } }
+    // We need to fetch full server details from API
+    if (event.data && event.data.serverID) {
+      const serverName = event.data.name || event.data.serverID;
+      addNotification('info', `Server discovered: ${serverName}`);
+      // Full server data will come from polling or API call
+      // For now, just notify user
     }
   }
 
@@ -178,18 +181,17 @@ export class SSEClient {
    * Handle server status changed event
    */
   private handleServerStatusChanged(event: ServerEvent) {
-    const serverId = event.metadata.serverId;
-    if (serverId && event.data && event.data.newStatus) {
-      const status: ServerStatus = event.data.newStatus;
-      updateServerStatus(serverId, status);
+    // Backend sends: { type: "server.status.changed", data: { serverID, oldState, newState } }
+    if (event.data && event.data.serverID) {
+      const serverId = event.data.serverID;
+      const oldState = event.data.oldState;
+      const newState = event.data.newState;
 
-      // Show notification for significant status changes
-      const oldState = event.data.oldStatus?.state;
-      const newState = status.state;
-
+      // Update server status in store
+      // Note: We don't have full ServerStatus object, so we'll need to fetch it
+      // For now, just show notification
       if (oldState !== newState) {
-        const serverName = event.metadata.serverName || serverId;
-        addNotification('info', `${serverName}: ${oldState} → ${newState}`);
+        addNotification('info', `Server ${serverId}: ${oldState} → ${newState}`);
       }
     }
   }
@@ -198,27 +200,35 @@ export class SSEClient {
    * Handle server log entry event
    */
   private handleServerLogEntry(event: ServerEvent) {
-    const serverId = event.metadata.serverId;
-    if (serverId && event.data && event.data.logEntry) {
-      const logEntry: LogEntry = event.data.logEntry;
+    // Backend sends: { type: "server.log.entry", data: { serverID, severity, message } }
+    if (event.data && event.data.serverID) {
+      const serverId = event.data.serverID;
+      const logEntry: LogEntry = {
+        timestamp: event.timestamp,
+        severity: event.data.severity,
+        message: event.data.message,
+        serverId: serverId
+      };
+
       addLog(serverId, logEntry);
 
       // Show notification for error logs
       if (logEntry.severity === 'error') {
-        addNotification('error', `${event.metadata.serverName || serverId}: ${logEntry.message}`);
+        const serverName = event.metadata?.serverName || serverId;
+        addNotification('error', `${serverName}: ${logEntry.message}`);
       }
     }
   }
 
   /**
-   * Handle server config changed event
+   * Handle config file changed event
    */
   private handleServerConfigChanged(event: ServerEvent) {
-    const serverId = event.metadata.serverId;
-    if (serverId) {
-      const serverName = event.metadata.serverName || serverId;
-      addNotification('info', `Configuration updated: ${serverName}`);
-      // Could trigger a re-fetch of the server data here
+    // Backend sends: { type: "config.file.changed", data: { filePath } }
+    if (event.data && event.data.filePath) {
+      const filePath = event.data.filePath;
+      addNotification('info', `Configuration file changed: ${filePath}`);
+      // Could trigger a re-fetch of servers from the config file
     }
   }
 
@@ -226,8 +236,9 @@ export class SSEClient {
    * Handle server metrics updated event
    */
   private handleServerMetricsUpdated(event: ServerEvent) {
-    const serverId = event.metadata.serverId;
-    if (serverId && event.data && event.data.metrics) {
+    // Backend sends: { type: "server.metrics.updated", data: { serverID, metrics } }
+    if (event.data && event.data.serverID && event.data.metrics) {
+      const serverId = event.data.serverID;
       const metrics: ServerMetrics = event.data.metrics;
       updateMetrics(serverId, metrics);
       // Don't show notification for metrics updates (too frequent)
