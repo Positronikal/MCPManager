@@ -73,7 +73,7 @@ func (h *DependencyHandlers) GetServerDependencies(w http.ResponseWriter, r *htt
 	// Check if all dependencies are satisfied
 	allSatisfied := true
 	for _, dep := range deps {
-		if !dep.Satisfied {
+		if !dep.IsInstalled() {
 			allSatisfied = false
 			break
 		}
