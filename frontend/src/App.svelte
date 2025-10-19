@@ -5,7 +5,7 @@
   import Sidebar from './components/Sidebar.svelte';
   import { isConnected, isDiscovering, notifications } from './stores/stores';
   import { api } from './services/api';
-  import { connectSSE, disconnectSSE } from './services/sse';
+  import { setupWailsEvents, cleanupWailsEvents } from './services/events';
   import { onMount, onDestroy } from 'svelte';
 
   let logPanelHeight = 200; // Default 200px per FR-020
@@ -13,15 +13,17 @@
   let startY = 0;
   let startHeight = 0;
 
-  // Connect to SSE stream on mount
+  // Setup Wails event listeners on mount
   onMount(() => {
-    connectSSE();
+    setupWailsEvents();
+    // Mark as connected (Wails IPC is always available when running)
+    isConnected.set(true);
     refreshDiscovery();
   });
 
-  // Disconnect SSE on unmount
+  // Cleanup Wails event listeners on unmount
   onDestroy(() => {
-    disconnectSSE();
+    cleanupWailsEvents();
   });
 
   // Refresh discovery - triggers server scan

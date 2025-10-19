@@ -23,33 +23,15 @@ func NewProcessDiscovery(eventBus *events.EventBus) *ProcessDiscovery {
 	}
 }
 
-// DiscoverFromProcesses discovers running MCP servers from system processes
+// DiscoverFromProcesses is DEPRECATED and should not be called directly.
+// Use DiscoveryService.Discover() instead, which properly matches processes
+// against discovered servers per the spec's three-tier strategy.
+//
+// This method is kept for backward compatibility but returns empty list.
 func (pd *ProcessDiscovery) DiscoverFromProcesses() ([]models.MCPServer, error) {
-	var servers []models.MCPServer
-
-	processes, err := pd.listProcesses()
-	if err != nil {
-		return servers, err
-	}
-
-	// Filter for MCP-related processes
-	for _, proc := range processes {
-		if strings.Contains(strings.ToLower(proc.CommandLine), "mcp") {
-			server := models.NewMCPServer(proc.Name, proc.CommandLine, models.DiscoveryProcess)
-			server.SetPID(proc.PID)
-			server.Status.State = models.StatusRunning
-			servers = append(servers, *server)
-		}
-	}
-
-	// Publish discovery events
-	for i := range servers {
-		if pd.eventBus != nil {
-			pd.eventBus.Publish(events.ServerDiscoveredEvent(&servers[i]))
-		}
-	}
-
-	return servers, nil
+	// Per spec research.md §16: Process discovery should NOT create new server entries
+	// It should only match PIDs to servers discovered from client configs and filesystem
+	return []models.MCPServer{}, nil
 }
 
 // ProcessInfo represents a running process

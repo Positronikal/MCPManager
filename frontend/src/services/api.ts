@@ -9,37 +9,8 @@ import type {
   ServerStatus
 } from '../stores/stores';
 
-const API_BASE_URL = 'http://localhost:8080/api/v1';
-
-// Helper function for making API requests
-async function apiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
-
-  const defaultOptions: RequestInit = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers
-    },
-    ...options
-  };
-
-  try {
-    const response = await fetch(url, defaultOptions);
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error(`API request failed: ${endpoint}`, error);
-    throw error;
-  }
-}
+// Import Wails bindings
+import * as WailsApp from '../../wailsjs/go/main/App';
 
 // Discovery API
 export const discoveryAPI = {
@@ -48,26 +19,32 @@ export const discoveryAPI = {
     count: number;
     lastDiscovery: string;
   }> {
-    const params = new URLSearchParams();
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.source) params.append('source', filters.source);
+    const response = await WailsApp.ListServers();
+    // Note: Wails bindings don't support query params in the same way
+    // Filtering would need to be done client-side or added as parameters to the Go method
+    let servers = response.servers || [];
 
-    const query = params.toString() ? `?${params.toString()}` : '';
-    return apiRequest<{
-      servers: MCPServer[];
-      count: number;
-      lastDiscovery: string;
-    }>(`/servers${query}`);
+    // Apply client-side filtering if needed
+    if (filters?.status) {
+      servers = servers.filter(s => s.status?.state === filters.status);
+    }
+    if (filters?.source) {
+      servers = servers.filter(s => s.source === filters.source);
+    }
+
+    return {
+      servers,
+      count: servers.length,
+      lastDiscovery: response.lastDiscovery
+    };
   },
 
   async discoverServers(): Promise<{ message: string; scanId: string }> {
-    return apiRequest<{ message: string; scanId: string }>('/servers/discover', {
-      method: 'POST'
-    });
+    return await WailsApp.DiscoverServers();
   },
 
   async getServer(serverId: string): Promise<MCPServer> {
-    return apiRequest<MCPServer>(`/servers/${serverId}`);
+    return await WailsApp.GetServer(serverId);
   }
 };
 
@@ -78,62 +55,41 @@ export const lifecycleAPI = {
     serverId: string;
     status: string;
   }> {
-    return apiRequest<{
-      message: string;
-      serverId: string;
-      status: string;
-    }>(`/servers/${serverId}/start`, {
-      method: 'POST'
-    });
+    return await WailsApp.StartServer(serverId);
   },
 
   async stopServer(
     serverId: string,
     options?: { force?: boolean; timeout?: number }
   ): Promise<{ message: string; serverId: string }> {
-    return apiRequest<{ message: string; serverId: string }>(
-      `/servers/${serverId}/stop`,
-      {
-        method: 'POST',
-        body: JSON.stringify(options || {})
-      }
-    );
+    const force = options?.force || false;
+    const timeout = options?.timeout || 30;
+    return await WailsApp.StopServer(serverId, force, timeout);
   },
 
   async restartServer(serverId: string): Promise<{
     message: string;
     serverId: string;
   }> {
-    return apiRequest<{ message: string; serverId: string }>(
-      `/servers/${serverId}/restart`,
-      {
-        method: 'POST'
-      }
-    );
+    return await WailsApp.RestartServer(serverId);
   },
 
   async getServerStatus(serverId: string): Promise<ServerStatus> {
-    return apiRequest<ServerStatus>(`/servers/${serverId}/status`);
+    return await WailsApp.GetServerStatus(serverId);
   }
 };
 
 // Configuration API
 export const configAPI = {
   async getConfiguration(serverId: string): Promise<ServerConfiguration> {
-    return apiRequest<ServerConfiguration>(`/servers/${serverId}/configuration`);
+    return await WailsApp.GetConfiguration(serverId);
   },
 
   async updateConfiguration(
     serverId: string,
     config: ServerConfiguration
   ): Promise<ServerConfiguration> {
-    return apiRequest<ServerConfiguration>(
-      `/servers/${serverId}/configuration`,
-      {
-        method: 'PUT',
-        body: JSON.stringify(config)
-      }
-    );
+    return await WailsApp.UpdateConfiguration(serverId, config);
   }
 };
 
@@ -143,15 +99,11 @@ export const monitoringAPI = {
     serverId: string,
     options?: { severity?: string; limit?: number; offset?: number }
   ): Promise<{ logs: LogEntry[]; total: number; hasMore: boolean }> {
-    const params = new URLSearchParams();
-    if (options?.severity) params.append('severity', options.severity);
-    if (options?.limit) params.append('limit', options.limit.toString());
-    if (options?.offset) params.append('offset', options.offset.toString());
+    const severity = options?.severity || '';
+    const limit = options?.limit || 100;
+    const offset = options?.offset || 0;
 
-    const query = params.toString() ? `?${params.toString()}` : '';
-    return apiRequest<{ logs: LogEntry[]; total: number; hasMore: boolean }>(
-      `/servers/${serverId}/logs${query}`
-    );
+    return await WailsApp.GetLogs(serverId, severity, limit, offset);
   },
 
   async getAllLogs(options?: {
@@ -160,18 +112,20 @@ export const monitoringAPI = {
     search?: string;
     limit?: number;
   }): Promise<{ logs: LogEntry[]; total: number }> {
-    const params = new URLSearchParams();
-    if (options?.serverId) params.append('serverId', options.serverId);
-    if (options?.severity) params.append('severity', options.severity);
-    if (options?.search) params.append('search', options.search);
-    if (options?.limit) params.append('limit', options.limit.toString());
+    const serverId = options?.serverId || '';
+    const severity = options?.severity || '';
+    const search = options?.search || '';
+    const limit = options?.limit || 100;
 
-    const query = params.toString() ? `?${params.toString()}` : '';
-    return apiRequest<{ logs: LogEntry[]; total: number }>(`/logs${query}`);
+    const response = await WailsApp.GetAllLogs(serverId, severity, search, limit);
+    return {
+      logs: response.logs || [],
+      total: response.total || 0
+    };
   },
 
   async getServerMetrics(serverId: string): Promise<ServerMetrics> {
-    return apiRequest<ServerMetrics>(`/servers/${serverId}/metrics`);
+    return await WailsApp.GetMetrics(serverId);
   }
 };
 
@@ -181,29 +135,24 @@ export const dependenciesAPI = {
     dependencies: Dependency[];
     allSatisfied: boolean;
   }> {
-    return apiRequest<{ dependencies: Dependency[]; allSatisfied: boolean }>(
-      `/servers/${serverId}/dependencies`
-    );
+    return await WailsApp.GetDependencies(serverId);
   },
 
   async getUpdates(serverId: string): Promise<UpdateInfo> {
-    return apiRequest<UpdateInfo>(`/servers/${serverId}/updates`);
+    return await WailsApp.GetUpdates(serverId);
   }
 };
 
 // Application State API
 export const appStateAPI = {
   async getApplicationState(): Promise<ApplicationState> {
-    return apiRequest<ApplicationState>('/application/state');
+    return await WailsApp.GetApplicationState();
   },
 
   async updateApplicationState(
     state: ApplicationState
   ): Promise<{ message: string }> {
-    return apiRequest<{ message: string }>('/application/state', {
-      method: 'PUT',
-      body: JSON.stringify(state)
-    });
+    return await WailsApp.UpdateApplicationState(state);
   }
 };
 
