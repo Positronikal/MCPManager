@@ -91,6 +91,7 @@ type DiscoverySource string
 
 const (
 	DiscoveryClientConfig DiscoverySource = "client_config"
+	DiscoveryExtension    DiscoverySource = "extension"
 	DiscoveryFilesystem   DiscoverySource = "filesystem"
 	DiscoveryProcess      DiscoverySource = "process"
 )
@@ -98,6 +99,7 @@ const (
 // ValidDiscoverySources contains all valid discovery sources
 var ValidDiscoverySources = []DiscoverySource{
 	DiscoveryClientConfig,
+	DiscoveryExtension,
 	DiscoveryFilesystem,
 	DiscoveryProcess,
 }

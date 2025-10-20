@@ -53,6 +53,7 @@ func (ccd *ClientConfigDiscovery) DiscoverFromClientConfigs() ([]models.MCPServe
 
 	// Get config directory
 	configDir := ccd.pathResolver.GetConfigDir()
+	fmt.Printf("  Config directory: %s\n", configDir)
 	if configDir == "" {
 		return allServers, fmt.Errorf("could not determine config directory")
 	}
@@ -74,12 +75,15 @@ func (ccd *ClientConfigDiscovery) DiscoverFromClientConfigs() ([]models.MCPServe
 
 	// Discover from each config file
 	for _, cfg := range configPaths {
+		fmt.Printf("  Checking %s config: %s\n", cfg.name, cfg.path)
 		servers, err := ccd.discoverFromFile(cfg.path, cfg.name)
 		if err != nil {
+			fmt.Printf("    ERROR: %v\n", err)
 			// Log warning but continue with other files
 			// In production, this would use proper logging
 			continue
 		}
+		fmt.Printf("    Found %d servers\n", len(servers))
 		allServers = append(allServers, servers...)
 	}
 
@@ -100,8 +104,11 @@ func (ccd *ClientConfigDiscovery) discoverFromFile(configPath, clientName string
 	// Check if file exists
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		// File doesn't exist - not an error, just no servers from this source
+		fmt.Printf("    File does not exist\n")
 		return servers, nil
 	}
+
+	fmt.Printf("    File exists, reading...\n")
 
 	// Read file
 	data, err := os.ReadFile(configPath)
@@ -109,16 +116,23 @@ func (ccd *ClientConfigDiscovery) discoverFromFile(configPath, clientName string
 		return servers, fmt.Errorf("failed to read config file %s: %w", configPath, err)
 	}
 
+	fmt.Printf("    Read %d bytes\n", len(data))
+
 	// Parse JSON
 	var config ClientConfig
 	if err := json.Unmarshal(data, &config); err != nil {
 		return servers, fmt.Errorf("failed to parse config file %s: %w", configPath, err)
 	}
 
+	fmt.Printf("    Parsed JSON, found %d server entries\n", len(config.MCPServers))
+
 	// Extract servers
 	for name, serverCfg := range config.MCPServers {
+		fmt.Printf("      Server: %s (command: %s, enabled: %v)\n", name, serverCfg.Command, serverCfg.IsEnabled())
+
 		// Skip disabled servers
 		if !serverCfg.IsEnabled() {
+			fmt.Printf("        Skipped (disabled)\n")
 			continue
 		}
 
@@ -134,6 +148,7 @@ func (ccd *ClientConfigDiscovery) discoverFromFile(configPath, clientName string
 			server.Configuration.EnvironmentVariables = make(map[string]string)
 		}
 
+		fmt.Printf("        Added to server list\n")
 		servers = append(servers, *server)
 	}
 

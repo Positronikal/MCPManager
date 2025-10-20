@@ -31,21 +31,33 @@ func (fd *FilesystemDiscovery) DiscoverFromFilesystem() ([]models.MCPServer, err
 	var allServers []models.MCPServer
 
 	// Discover from NPM global packages
+	fmt.Println("  Scanning NPM global packages...")
 	npmServers, err := fd.discoverNPMServers()
 	if err == nil {
+		fmt.Printf("    Found %d NPM servers\n", len(npmServers))
 		allServers = append(allServers, npmServers...)
+	} else {
+		fmt.Printf("    NPM scan error: %v\n", err)
 	}
 
 	// Discover from Python site-packages
+	fmt.Println("  Scanning Python site-packages...")
 	pythonServers, err := fd.discoverPythonServers()
 	if err == nil {
+		fmt.Printf("    Found %d Python servers\n", len(pythonServers))
 		allServers = append(allServers, pythonServers...)
+	} else {
+		fmt.Printf("    Python scan error: %v\n", err)
 	}
 
 	// Discover from Go binaries
+	fmt.Println("  Scanning Go binaries...")
 	goServers, err := fd.discoverGoServers()
 	if err == nil {
+		fmt.Printf("    Found %d Go servers\n", len(goServers))
 		allServers = append(allServers, goServers...)
+	} else {
+		fmt.Printf("    Go scan error: %v\n", err)
 	}
 
 	// Publish discovery events
@@ -63,6 +75,7 @@ func (fd *FilesystemDiscovery) discoverNPMServers() ([]models.MCPServer, error) 
 	var servers []models.MCPServer
 
 	// Get NPM global root
+	fmt.Println("    Running: npm root -g")
 	cmd := exec.Command("npm", "root", "-g")
 	output, err := cmd.Output()
 	if err != nil {
@@ -71,12 +84,14 @@ func (fd *FilesystemDiscovery) discoverNPMServers() ([]models.MCPServer, error) 
 	}
 
 	npmRoot := strings.TrimSpace(string(output))
+	fmt.Printf("    NPM global root: %s\n", npmRoot)
 	if npmRoot == "" {
 		return servers, fmt.Errorf("npm root returned empty")
 	}
 
 	// Check if directory exists
 	if _, err := os.Stat(npmRoot); os.IsNotExist(err) {
+		fmt.Printf("    Directory does not exist\n")
 		return servers, nil
 	}
 
@@ -86,6 +101,7 @@ func (fd *FilesystemDiscovery) discoverNPMServers() ([]models.MCPServer, error) 
 		return servers, err
 	}
 
+	fmt.Printf("    Scanning %d entries in NPM directory...\n", len(entries))
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
@@ -95,6 +111,7 @@ func (fd *FilesystemDiscovery) discoverNPMServers() ([]models.MCPServer, error) 
 
 		// Match patterns for MCP servers
 		if isMCPServerPackage(name) {
+			fmt.Printf("      Found MCP server package: %s\n", name)
 			serverPath := filepath.Join(npmRoot, name)
 
 			// Try to find the main entry point

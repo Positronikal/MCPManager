@@ -39,6 +39,7 @@ type ProcessInfo struct {
 	PID         int
 	Name        string
 	CommandLine string
+	ParentPID   int
 }
 
 // listProcesses returns a list of running processes (platform-specific)
@@ -53,52 +54,8 @@ func (pd *ProcessDiscovery) listProcesses() ([]ProcessInfo, error) {
 	}
 }
 
-// listProcessesWindows lists processes on Windows using tasklist
-func (pd *ProcessDiscovery) listProcessesWindows() ([]ProcessInfo, error) {
-	cmd := exec.Command("tasklist", "/fo", "csv", "/nh", "/v")
-	output, err := cmd.Output()
-	if err != nil {
-		return nil, fmt.Errorf("failed to run tasklist: %w", err)
-	}
-
-	return pd.parseTasklistOutput(string(output))
-}
-
-// parseTasklistOutput parses Windows tasklist CSV output
-func (pd *ProcessDiscovery) parseTasklistOutput(output string) ([]ProcessInfo, error) {
-	var processes []ProcessInfo
-
-	lines := strings.Split(output, "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-
-		// CSV format: "name","PID","Session Name","Session#","Mem Usage","Status","User","CPU Time","Window Title"
-		fields := parseCSVLine(line)
-		if len(fields) < 9 {
-			continue
-		}
-
-		name := strings.Trim(fields[0], `"`)
-		pidStr := strings.Trim(fields[1], `"`)
-		windowTitle := strings.Trim(fields[8], `"`)
-
-		pid, err := strconv.Atoi(pidStr)
-		if err != nil {
-			continue
-		}
-
-		processes = append(processes, ProcessInfo{
-			PID:         pid,
-			Name:        name,
-			CommandLine: windowTitle,
-		})
-	}
-
-	return processes, nil
-}
+// listProcessesWindows is implemented in process_windows.go using native Win32 API
+// This avoids dependency on WMIC which may be disabled in enterprise environments
 
 // listProcessesUnix lists processes on Unix systems using ps
 func (pd *ProcessDiscovery) listProcessesUnix() ([]ProcessInfo, error) {

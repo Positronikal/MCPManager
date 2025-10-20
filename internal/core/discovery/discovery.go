@@ -1,7 +1,9 @@
 package discovery
 
 import (
+	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 // DiscoveryService orchestrates all discovery sources
 type DiscoveryService struct {
 	clientConfigDiscovery *ClientConfigDiscovery
+	extensionsDiscovery   *ClaudeExtensionsDiscovery
 	filesystemDiscovery   *FilesystemDiscovery
 	processDiscovery      *ProcessDiscovery
 	eventBus              *events.EventBus
@@ -25,6 +28,7 @@ type DiscoveryService struct {
 func NewDiscoveryService(pathResolver platform.PathResolver, eventBus *events.EventBus) *DiscoveryService {
 	return &DiscoveryService{
 		clientConfigDiscovery: NewClientConfigDiscovery(pathResolver, eventBus),
+		extensionsDiscovery:   NewClaudeExtensionsDiscovery(pathResolver, eventBus),
 		filesystemDiscovery:   NewFilesystemDiscovery(pathResolver, eventBus),
 		processDiscovery:      NewProcessDiscovery(eventBus),
 		eventBus:              eventBus,
@@ -40,31 +44,71 @@ func NewDiscoveryService(pathResolver platform.PathResolver, eventBus *events.Ev
 //
 // Per spec research.md §16: "Discovery Sources Priority"
 func (ds *DiscoveryService) Discover() ([]models.MCPServer, error) {
+	fmt.Println("\n=== MCP SERVER DISCOVERY START ===")
+
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 
 	// Phase 1: Discover from client configs (PRIMARY - highest priority)
 	// FR-002: Read MCP client configuration files without modifying them
+	fmt.Println("\n[PHASE 1] Discovering from client configs...")
 	clientServers, err := ds.clientConfigDiscovery.DiscoverFromClientConfigs()
 	if err != nil {
+		fmt.Printf("[PHASE 1] ERROR: %v\n", err)
 		// Log but continue - client configs may not exist yet
+	} else {
+		fmt.Printf("[PHASE 1] Found %d servers from client configs\n", len(clientServers))
+		for i, srv := range clientServers {
+			fmt.Printf("  [%d] %s (cmd: %s, source: %s)\n", i+1, srv.Name, srv.InstallationPath, srv.Source)
+		}
+	}
+
+	// Phase 1.5: Discover from Claude Extensions (HIGH priority - after client configs)
+	fmt.Println("\n[PHASE 1.5] Discovering from Claude Extensions...")
+	extensionServers, err := ds.extensionsDiscovery.DiscoverFromExtensions()
+	if err != nil {
+		fmt.Printf("[PHASE 1.5] ERROR: %v\n", err)
+		// Log but continue - extensions may not exist
+	} else {
+		fmt.Printf("[PHASE 1.5] Found %d servers from Claude Extensions\n", len(extensionServers))
+		for i, srv := range extensionServers {
+			fmt.Printf("  [%d] %s (cmd: %s, source: %s, version: %s)\n", i+1, srv.Name, srv.InstallationPath, srv.Source, srv.Version)
+		}
 	}
 
 	// Phase 2: Discover from filesystem (SECONDARY)
 	// FR-001: Scan common installation locations
+	fmt.Println("\n[PHASE 2] Discovering from filesystem...")
 	filesystemServers, err := ds.filesystemDiscovery.DiscoverFromFilesystem()
 	if err != nil {
+		fmt.Printf("[PHASE 2] ERROR: %v\n", err)
 		// Log but continue - packages may not be installed
+	} else {
+		fmt.Printf("[PHASE 2] Found %d servers from filesystem\n", len(filesystemServers))
+		for i, srv := range filesystemServers {
+			fmt.Printf("  [%d] %s (path: %s, source: %s)\n", i+1, srv.Name, srv.InstallationPath, srv.Source)
+		}
 	}
 
-	// Merge Phase 1 & 2: Create authoritative server list
-	// Priority: client_config > filesystem
-	allServers := ds.mergeServersByName(clientServers, filesystemServers)
+	// Merge Phase 1, 1.5, & 2: Create authoritative server list
+	// Priority: client_config > extensions > filesystem
+	fmt.Println("\n[MERGE] Merging servers from all sources...")
+	allServers := ds.mergeServersByName(clientServers, extensionServers, filesystemServers)
+	fmt.Printf("[MERGE] Total unique servers after merge: %d\n", len(allServers))
 
 	// Phase 3: Match running processes against discovered servers (TERTIARY)
 	// FR-010: Track server process IDs for lifecycle management
 	// Per spec: "Match PIDs to discovered servers" NOT "discover new servers from processes"
+	fmt.Println("\n[PHASE 3] Matching running processes to discovered servers...")
 	allServers = ds.matchProcessesToServers(allServers)
+
+	runningCount := 0
+	for _, srv := range allServers {
+		if srv.Status.State == models.StatusRunning {
+			runningCount++
+		}
+	}
+	fmt.Printf("[PHASE 3] Matched %d running processes\n", runningCount)
 
 	// Update cache
 	ds.cachedServers = make(map[string]*models.MCPServer)
@@ -73,21 +117,28 @@ func (ds *DiscoveryService) Discover() ([]models.MCPServer, error) {
 	}
 	ds.lastDiscovery = time.Now()
 
+	fmt.Printf("\n=== DISCOVERY COMPLETE: %d total servers ===\n\n", len(allServers))
 	return allServers, nil
 }
 
 // mergeServersByName combines servers from multiple sources with priority handling
-// Priority: client_config > filesystem
-func (ds *DiscoveryService) mergeServersByName(clientServers, filesystemServers []models.MCPServer) []models.MCPServer {
+// Priority: client_config > extensions > filesystem
+func (ds *DiscoveryService) mergeServersByName(clientServers, extensionServers, filesystemServers []models.MCPServer) []models.MCPServer {
 	serverMap := make(map[string]*models.MCPServer) // name -> server
 
-	// Add filesystem servers first (lower priority)
+	// Add filesystem servers first (lowest priority)
 	for i := range filesystemServers {
 		server := &filesystemServers[i]
 		serverMap[server.Name] = server
 	}
 
-	// Add client config servers (higher priority - will override filesystem)
+	// Add extension servers (medium priority - will override filesystem)
+	for i := range extensionServers {
+		server := &extensionServers[i]
+		serverMap[server.Name] = server
+	}
+
+	// Add client config servers (highest priority - will override extensions and filesystem)
 	for i := range clientServers {
 		server := &clientServers[i]
 		serverMap[server.Name] = server
@@ -112,26 +163,43 @@ func (ds *DiscoveryService) matchProcessesToServers(servers []models.MCPServer) 
 	currentPID := os.Getpid()
 
 	// Get all running processes
+	fmt.Println("  Getting running processes...")
 	processes, err := ds.processDiscovery.listProcesses()
 	if err != nil {
+		fmt.Printf("  ERROR getting processes: %v\n", err)
 		// Log but continue - process matching is best-effort
 		return servers
+	}
+
+	fmt.Printf("  Found %d processes to match against\n", len(processes))
+
+	// Debug: Show relevant processes
+	for _, proc := range processes {
+		if proc.PID == currentPID {
+			continue
+		}
+		fmt.Printf("    PID %d: %s\n", proc.PID, proc.Name)
+		fmt.Printf("      CMD: %s\n", proc.CommandLine)
 	}
 
 	// For each discovered server, try to find a matching process
 	for i := range servers {
 		server := &servers[i]
 
+		fmt.Printf("  Matching server: %s (cmd: %s)\n", server.Name, server.InstallationPath)
+
 		// Try to match process by command/path
 		matchedProcess := ds.findMatchingProcess(server, processes, currentPID)
 
 		if matchedProcess != nil {
 			// Found a running process for this server
+			fmt.Printf("    ✓ MATCHED PID %d\n", matchedProcess.PID)
 			server.SetPID(matchedProcess.PID)
 			server.Status.State = models.StatusRunning
 			server.UpdateLastSeen()
 		} else {
 			// No matching process found - server is stopped
+			fmt.Printf("    ✗ No match found\n")
 			server.ClearPID()
 			server.Status.State = models.StatusStopped
 		}
@@ -150,35 +218,97 @@ func (ds *DiscoveryService) findMatchingProcess(server *models.MCPServer, proces
 			continue
 		}
 
-		// Skip if process name/path doesn't match server
-		if !ds.processMatchesServer(proc, server) {
-			continue
+		// Try to match process to server
+		if ds.processMatchesServer(proc, server) {
+			return proc
 		}
-
-		return proc
 	}
 
 	return nil
 }
 
 // processMatchesServer determines if a process matches a server definition
+// Uses sophisticated matching based on command + arguments
 func (ds *DiscoveryService) processMatchesServer(proc *ProcessInfo, server *models.MCPServer) bool {
-	// Match by command path
-	if proc.CommandLine == server.InstallationPath {
+	cmdLine := strings.ToLower(proc.CommandLine)
+	serverCmd := strings.ToLower(server.InstallationPath)
+
+	fmt.Printf("      Checking process PID %d:\n", proc.PID)
+	fmt.Printf("        Process: %s\n", proc.Name)
+	fmt.Printf("        CmdLine: %s\n", cmdLine)
+	fmt.Printf("        Server cmd: %s, args: %v\n", serverCmd, server.Configuration.CommandLineArguments)
+
+	// Method 1: Match by command + args pattern
+	// For extension servers, match the command and key arguments
+	if server.Source == models.DiscoveryExtension {
+		// Extension servers have specific patterns
+
+		// Check if process name matches the server command
+		procName := strings.ToLower(proc.Name)
+		if !strings.Contains(procName, serverCmd) && !strings.HasPrefix(serverCmd, procName) {
+			fmt.Printf("        ✗ Process name doesn't match server command\n")
+			// Still continue - the command might be in the path
+		}
+
+		// Check if command line contains key arguments from server config
+		for _, arg := range server.Configuration.CommandLineArguments {
+			argLower := strings.ToLower(arg)
+			// Skip common flags
+			if strings.HasPrefix(argLower, "-") || strings.HasPrefix(argLower, "--") {
+				continue
+			}
+			// Check if this argument appears in command line
+			if strings.Contains(cmdLine, argLower) {
+				fmt.Printf("        ✓ Argument match: %s\n", arg)
+				return true
+			}
+		}
+
+		// For node servers, check if the entry point script is in the command line
+		if serverCmd == "node" || strings.Contains(cmdLine, "node.exe") {
+			// Get extension path from environment variables
+			if extPath, ok := server.Configuration.EnvironmentVariables["__EXTENSION_PATH__"]; ok {
+				extPathLower := strings.ToLower(strings.ReplaceAll(extPath, "\\", "/"))
+				cmdLinePath := strings.ReplaceAll(cmdLine, "\\", "/")
+
+				// Check if command line contains the extension path
+				if strings.Contains(cmdLinePath, extPathLower) {
+					fmt.Printf("        ✓ Extension path match\n")
+					return true
+				}
+			}
+		}
+
+		// For uv/python servers, check for the directory path
+		if serverCmd == "uv" || serverCmd == "python" || serverCmd == "python3" {
+			// Get extension path from environment variables
+			if extPath, ok := server.Configuration.EnvironmentVariables["__EXTENSION_PATH__"]; ok {
+				extPathLower := strings.ToLower(strings.ReplaceAll(extPath, "\\", "/"))
+				cmdLinePath := strings.ReplaceAll(cmdLine, "\\", "/")
+
+				// Check if command line contains the extension path
+				if strings.Contains(cmdLinePath, extPathLower) {
+					fmt.Printf("        ✓ Extension path match\n")
+					return true
+				}
+			}
+		}
+	}
+
+	// Method 2: Direct command path match
+	if cmdLine == serverCmd {
+		fmt.Printf("        ✓ Direct command match\n")
 		return true
 	}
 
-	// Match by server name in command line (for node/python servers)
-	// e.g., "node server-name" or "python -m server-name"
-	if containsServerName(proc.CommandLine, server.Name) {
+	// Method 3: Match by server name in command line
+	serverNameLower := strings.ToLower(server.Name)
+	if strings.Contains(cmdLine, serverNameLower) {
+		fmt.Printf("        ✓ Server name match\n")
 		return true
 	}
 
-	// Match by executable name
-	if containsServerName(proc.Name, server.Name) {
-		return true
-	}
-
+	fmt.Printf("        ✗ No match\n")
 	return false
 }
 

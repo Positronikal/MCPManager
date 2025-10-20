@@ -22,7 +22,12 @@
       "Bash(for file in discovery.go lifecycle.go config.go monitoring.go dependencies.go appstate.go events.go middleware.go router.go)",
       "Bash(do test -f internal/api/$file)",
       "Bash(go test:*)",
-      "Bash(go mod tidy:*)"
+      "Bash(go mod tidy:*)",
+      "Bash(ls:*)",
+      "Read(//c/Users/hoyth/AppData/Roaming/npm/node_modules/**)",
+      "Read(//c/Users/hoyth/AppData/Roaming/Claude/Claude Extensions Settings/**)",
+      "Read(//c/Users/hoyth/AppData/Roaming/Claude/Claude Extensions/**)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
