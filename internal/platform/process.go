@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -48,47 +47,69 @@ func (pm *DefaultProcessManager) Start(cmd string, args []string, env map[string
 
 // Stop terminates a process by its ID
 func (pm *DefaultProcessManager) Stop(pid int, graceful bool, timeout int) error {
+	fmt.Printf("[ProcessManager] Stop called: pid=%d, graceful=%v, timeout=%d\n", pid, graceful, timeout)
+
 	// Find the process
 	process, err := os.FindProcess(pid)
 	if err != nil {
+		fmt.Printf("[ProcessManager] os.FindProcess failed: pid=%d, error=%v\n", pid, err)
 		return fmt.Errorf("process not found: %w", err)
 	}
+	fmt.Printf("[ProcessManager] Process found: pid=%d\n", pid)
 
 	if graceful {
+		fmt.Printf("[ProcessManager] Attempting graceful shutdown: pid=%d\n", pid)
 		// Try graceful shutdown first
 		if err := pm.sendTermSignal(process); err != nil {
-			// Process might already be dead, which is fine
-			return nil
-		}
-
-		// Wait for process to exit
-		done := make(chan bool)
-		go func() {
-			// Poll for process exit
-			for i := 0; i < timeout*10; i++ {
-				if !pm.IsRunning(pid) {
-					done <- true
-					return
-				}
-				time.Sleep(100 * time.Millisecond)
+			fmt.Printf("[ProcessManager] Graceful termination signal failed: pid=%d, error=%v\n", pid, err)
+			// If signal failed, process might already be dead
+			if !pm.IsRunning(pid) {
+				fmt.Printf("[ProcessManager] Process already dead after signal failure: pid=%d\n", pid)
+				return nil
 			}
-			done <- false
-		}()
+			// Signal failed but process still running, fall through to force kill
+		} else {
+			fmt.Printf("[ProcessManager] Graceful termination signal sent: pid=%d, waiting for exit...\n", pid)
 
-		if <-done {
-			// Process exited gracefully
-			return nil
+			// Wait for process to exit
+			done := make(chan bool)
+			go func() {
+				// Poll for process exit
+				for i := 0; i < timeout*10; i++ {
+					if !pm.IsRunning(pid) {
+						fmt.Printf("[ProcessManager] Process exited gracefully: pid=%d\n", pid)
+						done <- true
+						return
+					}
+					time.Sleep(100 * time.Millisecond)
+				}
+				fmt.Printf("[ProcessManager] Graceful shutdown timed out: pid=%d\n", pid)
+				done <- false
+			}()
+
+			if <-done {
+				// Process exited gracefully
+				return nil
+			}
+
+			// Graceful shutdown timed out, fall through to force kill
+			fmt.Printf("[ProcessManager] Proceeding to force kill: pid=%d\n", pid)
 		}
-
-		// Graceful shutdown timed out, fall through to force kill
 	}
 
 	// Force kill
+	fmt.Printf("[ProcessManager] Attempting force kill: pid=%d\n", pid)
 	if err := process.Kill(); err != nil {
-		// Process might already be dead
-		return nil
+		fmt.Printf("[ProcessManager] Force kill failed: pid=%d, error=%v\n", pid, err)
+		// Check if process is actually dead
+		if !pm.IsRunning(pid) {
+			fmt.Printf("[ProcessManager] Process is dead despite kill error: pid=%d\n", pid)
+			return nil
+		}
+		return fmt.Errorf("failed to kill process %d: %w", pid, err)
 	}
 
+	fmt.Printf("[ProcessManager] Force kill succeeded: pid=%d\n", pid)
 	return nil
 }
 
@@ -109,19 +130,10 @@ func (pm *DefaultProcessManager) IsRunning(pid int) bool {
 		return false
 	}
 
-	// Try to send signal 0 (no-op) to check if process exists
+	// On Windows, we need to use platform-specific process checking
 	if runtime.GOOS == "windows" {
-		// On Windows, os.FindProcess always succeeds, so we need a different check
-		// Signal(0) doesn't work on Windows, but we can check by trying to kill
-		// and seeing if we get "process already finished" error
-		err = process.Signal(os.Kill)
-		if err == nil {
-			// Successfully sent signal, process exists
-			// Note: We're not actually killing it because this is just a check
-			return true
-		}
-		// Check if error is "process already finished"
-		return !strings.Contains(err.Error(), "finished")
+		// Use Windows-specific process check
+		return isRunningWindows(pid)
 	}
 
 	// On Unix, sending signal 0 checks if process exists

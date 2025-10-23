@@ -262,6 +262,15 @@ func (a *App) StartServer(serverID string) (*ServerOperationResponse, error) {
 		return nil, fmt.Errorf("failed to start server: %w", err)
 	}
 
+	// Update server in discovery cache
+	a.discoveryService.UpdateServer(server)
+
+	// Emit real-time status change event to frontend
+	runtime.EventsEmit(a.ctx, "server:status:changed", map[string]interface{}{
+		"serverId": serverID,
+		"status":   server.Status,
+	})
+
 	return &ServerOperationResponse{
 		Message:  "Server started successfully",
 		ServerID: serverID,
@@ -271,19 +280,52 @@ func (a *App) StartServer(serverID string) (*ServerOperationResponse, error) {
 
 // StopServer stops a server by ID
 func (a *App) StopServer(serverID string, force bool, timeout int) (*ServerOperationResponse, error) {
-	slog.Info("StopServer called", "serverId", serverID, "force", force, "timeout", timeout)
+	slog.Info("[App.StopServer] Called", "serverId", serverID, "force", force, "timeout", timeout)
 
 	// Get server info
+	slog.Info("[App.StopServer] Looking up server", "serverId", serverID)
 	server, exists := a.discoveryService.GetServerByID(serverID)
 	if !exists {
+		slog.Error("[App.StopServer] Server not found", "serverId", serverID)
 		return nil, fmt.Errorf("server not found: %s", serverID)
+	}
+	slog.Info("[App.StopServer] Server found", "serverId", serverID, "name", server.Name, "currentState", server.Status.State, "pid", server.PID)
+
+	// Log current state
+	if server.PID != nil {
+		slog.Info("[App.StopServer] Server has PID", "pid", *server.PID)
+	} else {
+		slog.Warn("[App.StopServer] Server has no PID!", "serverId", serverID)
+	}
+
+	// Check state
+	slog.Info("[App.StopServer] Checking server state", "state", server.Status.State)
+	if server.Status.State != models.StatusRunning && server.Status.State != models.StatusStarting {
+		slog.Warn("[App.StopServer] Server not in stoppable state", "serverId", serverID, "state", server.Status.State)
+		return nil, fmt.Errorf("server is not running (current state: %s)", server.Status.State)
 	}
 
 	// Stop the server
+	slog.Info("[App.StopServer] Calling lifecycle service StopServer", "serverId", serverID)
 	if err := a.lifecycleService.StopServer(server, force, timeout); err != nil {
+		slog.Error("[App.StopServer] Lifecycle service returned error", "serverId", serverID, "error", err)
 		return nil, fmt.Errorf("failed to stop server: %w", err)
 	}
 
+	slog.Info("[App.StopServer] Lifecycle service succeeded", "serverId", serverID)
+
+	// Update server in discovery cache
+	slog.Info("[App.StopServer] Updating server in cache", "serverId", serverID, "newState", server.Status.State, "pid", server.PID)
+	a.discoveryService.UpdateServer(server)
+
+	// Emit real-time status change event to frontend
+	slog.Info("[App.StopServer] Emitting status change event to frontend", "serverId", serverID, "state", server.Status.State)
+	runtime.EventsEmit(a.ctx, "server:status:changed", map[string]interface{}{
+		"serverId": serverID,
+		"status":   server.Status,
+	})
+
+	slog.Info("[App.StopServer] Completed successfully", "serverId", serverID)
 	return &ServerOperationResponse{
 		Message:  "Server stopped successfully",
 		ServerID: serverID,
@@ -304,6 +346,15 @@ func (a *App) RestartServer(serverID string) (*ServerOperationResponse, error) {
 	if err := a.lifecycleService.RestartServer(server); err != nil {
 		return nil, fmt.Errorf("failed to restart server: %w", err)
 	}
+
+	// Update server in discovery cache
+	a.discoveryService.UpdateServer(server)
+
+	// Emit real-time status change event to frontend
+	runtime.EventsEmit(a.ctx, "server:status:changed", map[string]interface{}{
+		"serverId": serverID,
+		"status":   server.Status,
+	})
 
 	return &ServerOperationResponse{
 		Message:  "Server restarted successfully",

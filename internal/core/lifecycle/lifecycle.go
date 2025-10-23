@@ -2,6 +2,7 @@ package lifecycle
 
 import (
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -89,28 +90,54 @@ func (ls *LifecycleService) StopServer(server *models.MCPServer, force bool, tim
 		return fmt.Errorf("server cannot be nil")
 	}
 
+	slog := slog.With("serverId", server.ID, "serverName", server.Name)
+	slog.Info("StopServer: Starting stop operation")
+
 	// Validate current state
 	if server.Status.State != models.StatusRunning && server.Status.State != models.StatusStarting {
+		slog.Warn("StopServer: Invalid state for stop operation", "currentState", server.Status.State)
 		return fmt.Errorf("server must be running or starting to stop, current state: %s", server.Status.State)
 	}
 
 	// Check if we have a PID
 	if server.PID == nil {
+		slog.Error("StopServer: Server has no PID")
 		return fmt.Errorf("server has no PID")
 	}
 
-	// Stop monitoring
+	pid := *server.PID
+	slog.Info("StopServer: Stopping process", "pid", pid, "force", force, "timeout", timeout)
+
+	// Stop monitoring first (prevents race conditions)
 	ls.stopMonitoring(server.ID)
+
+	// Verify process is still running before attempting to stop
+	if !ls.processManager.IsRunning(pid) {
+		slog.Warn("StopServer: Process is not running", "pid", pid)
+		// Process already dead, just update state
+		oldState := server.Status.State
+		server.Status.TransitionTo(models.StatusStopped, "Process not running")
+		server.PID = nil
+		if ls.eventBus != nil {
+			ls.eventBus.Publish(events.ServerStatusChangedEvent(server.ID, oldState, models.StatusStopped))
+		}
+		return nil
+	}
 
 	// Stop the process
 	graceful := !force
-	if err := ls.processManager.Stop(*server.PID, graceful, timeout); err != nil {
-		return fmt.Errorf("failed to stop process: %w", err)
+	slog.Info("StopServer: Calling process manager Stop", "pid", pid, "graceful", graceful)
+	if err := ls.processManager.Stop(pid, graceful, timeout); err != nil {
+		slog.Error("StopServer: Process manager Stop failed", "pid", pid, "error", err)
+		return fmt.Errorf("failed to stop process %d: %w", pid, err)
 	}
+
+	slog.Info("StopServer: Process stopped successfully", "pid", pid)
 
 	// Transition to stopped state
 	oldState := server.Status.State
 	if err := server.Status.TransitionTo(models.StatusStopped, "Server stopped"); err != nil {
+		slog.Error("StopServer: Failed to transition to stopped state", "error", err)
 		return fmt.Errorf("failed to transition to stopped state: %w", err)
 	}
 
@@ -122,6 +149,7 @@ func (ls *LifecycleService) StopServer(server *models.MCPServer, force bool, tim
 		ls.eventBus.Publish(events.ServerStatusChangedEvent(server.ID, oldState, models.StatusStopped))
 	}
 
+	slog.Info("StopServer: Stop operation completed successfully")
 	return nil
 }
 

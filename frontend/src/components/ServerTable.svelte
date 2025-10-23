@@ -44,15 +44,22 @@
 
   // Handle Stop server action
   async function handleStop(server: MCPServer, force: boolean = false) {
+    console.log('[UI] handleStop called', { serverId: server.id, name: server.name, force, timeout: 10 });
     try {
       loadingServers.set(server.id, 'stopping');
       loadingServers = loadingServers;
 
-      await api.lifecycle.stopServer(server.id, { force, timeout: 10 });
+      console.log('[UI] Calling api.lifecycle.stopServer...');
+      const result = await api.lifecycle.stopServer(server.id, { force, timeout: 10 });
+      console.log('[UI] api.lifecycle.stopServer returned:', result);
       addNotification('success', `${force ? 'Force stopping' : 'Stopping'} ${server.name}...`);
     } catch (error) {
-      console.error('Failed to stop server:', error);
-      addNotification('error', `Failed to stop ${server.name}: ${error.message}`);
+      console.error('[UI] Failed to stop server - Full error object:', error);
+      console.error('[UI] Error type:', typeof error);
+      console.error('[UI] Error message:', error?.message);
+      console.error('[UI] Error string:', String(error));
+      const errorMsg = error?.message || String(error) || 'undefined';
+      addNotification('error', `Failed to stop ${server.name}: ${errorMsg}`);
     } finally {
       loadingServers.delete(server.id);
       loadingServers = loadingServers;

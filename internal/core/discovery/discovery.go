@@ -110,11 +110,44 @@ func (ds *DiscoveryService) Discover() ([]models.MCPServer, error) {
 	}
 	fmt.Printf("[PHASE 3] Matched %d running processes\n", runningCount)
 
-	// Update cache
-	ds.cachedServers = make(map[string]*models.MCPServer)
+	// Update cache - preserve existing servers and merge new discoveries
+	fmt.Println("\n[CACHE UPDATE] Merging discovered servers into cache...")
+	newCache := make(map[string]*models.MCPServer)
 	for i := range allServers {
-		ds.cachedServers[allServers[i].ID] = &allServers[i]
+		serverID := allServers[i].ID
+		discoveredServer := &allServers[i]
+
+		// Check if this server already exists in cache
+		if existingServer, exists := ds.cachedServers[serverID]; exists {
+			fmt.Printf("  Server %s already in cache (state: %s), updating with discovery results\n",
+				existingServer.Name, existingServer.Status.State)
+
+			// Preserve PID and status if process is still running but not matched
+			// (e.g., server was stopped manually but process hasn't died yet)
+			if existingServer.Status.State == models.StatusStopped && discoveredServer.Status.State == models.StatusStopped {
+				// Both stopped - use discovered server
+				newCache[serverID] = discoveredServer
+			} else if discoveredServer.Status.State == models.StatusRunning {
+				// Process found during discovery - use discovered state
+				newCache[serverID] = discoveredServer
+			} else {
+				// No process found - preserve existing state if it's stopped
+				if existingServer.Status.State == models.StatusStopped {
+					newCache[serverID] = existingServer
+				} else {
+					// Server was running, now stopped
+					newCache[serverID] = discoveredServer
+				}
+			}
+		} else {
+			// New server discovery
+			fmt.Printf("  New server discovered: %s (state: %s)\n",
+				discoveredServer.Name, discoveredServer.Status.State)
+			newCache[serverID] = discoveredServer
+		}
 	}
+
+	ds.cachedServers = newCache
 	ds.lastDiscovery = time.Now()
 
 	fmt.Printf("\n=== DISCOVERY COMPLETE: %d total servers ===\n\n", len(allServers))

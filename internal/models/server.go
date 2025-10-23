@@ -1,6 +1,8 @@
 package models
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"time"
@@ -25,11 +27,41 @@ type MCPServer struct {
 	Source           DiscoverySource     `json:"source"`
 }
 
+// GenerateDeterministicUUID creates a stable UUID based on server identity
+// This ensures the same server always gets the same UUID across discoveries
+func GenerateDeterministicUUID(name, installationPath string, source DiscoverySource) string {
+	// Create a unique identifier string combining:
+	// - Server name (e.g., "Filesystem")
+	// - Installation path/command (e.g., "node")
+	// - Source (e.g., "extension")
+	// This ensures the same server always gets the same ID
+	identityString := fmt.Sprintf("%s|%s|%s", name, installationPath, source)
+
+	// Hash the identity string to create a deterministic but unique value
+	hash := sha256.Sum256([]byte(identityString))
+
+	// Convert first 16 bytes of hash to UUID format
+	// This creates a valid UUID v5-style deterministic ID
+	hashHex := hex.EncodeToString(hash[:16])
+
+	// Format as UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+	uuidStr := fmt.Sprintf("%s-%s-%s-%s-%s",
+		hashHex[0:8],
+		hashHex[8:12],
+		hashHex[12:16],
+		hashHex[16:20],
+		hashHex[20:32],
+	)
+
+	return uuidStr
+}
+
 // NewMCPServer creates a new MCPServer with default values
+// Uses deterministic UUID generation to ensure stability across discoveries
 func NewMCPServer(name, installationPath string, source DiscoverySource) *MCPServer {
 	now := time.Now()
 	return &MCPServer{
-		ID:               uuid.New().String(),
+		ID:               GenerateDeterministicUUID(name, installationPath, source),
 		Name:             name,
 		InstallationPath: installationPath,
 		Status:           *NewServerStatus(),
