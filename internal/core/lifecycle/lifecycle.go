@@ -13,18 +13,29 @@ import (
 
 // LifecycleService manages server lifecycle operations (start, stop, restart)
 type LifecycleService struct {
-	processManager platform.ProcessManager
-	eventBus       *events.EventBus
-	mu             sync.RWMutex
-	monitors       map[string]chan struct{} // serverID -> stop channel for monitor
+	processManager   platform.ProcessManager
+	discoveryService DiscoveryService // Interface for cache synchronization
+	eventBus         *events.EventBus
+	mu               sync.RWMutex
+	monitors         map[string]chan struct{} // serverID -> stop channel for monitor
+}
+
+// DiscoveryService interface for cache updates (avoid circular dependency)
+type DiscoveryService interface {
+	UpdateServer(server *models.MCPServer)
 }
 
 // NewLifecycleService creates a new lifecycle service
-func NewLifecycleService(processManager platform.ProcessManager, eventBus *events.EventBus) *LifecycleService {
+func NewLifecycleService(
+	processManager platform.ProcessManager,
+	discoveryService DiscoveryService,
+	eventBus *events.EventBus,
+) *LifecycleService {
 	return &LifecycleService{
-		processManager: processManager,
-		eventBus:       eventBus,
-		monitors:       make(map[string]chan struct{}),
+		processManager:   processManager,
+		discoveryService: discoveryService,
+		eventBus:         eventBus,
+		monitors:         make(map[string]chan struct{}),
 	}
 }
 
@@ -77,6 +88,11 @@ func (ls *LifecycleService) StartServer(server *models.MCPServer) error {
 	// Update server with PID
 	server.SetPID(pid)
 
+	// Synchronously update discovery cache (BUG-001 fix)
+	if ls.discoveryService != nil {
+		ls.discoveryService.UpdateServer(server)
+	}
+
 	// Start monitoring the process
 	ls.startMonitoring(server)
 
@@ -118,6 +134,13 @@ func (ls *LifecycleService) StopServer(server *models.MCPServer, force bool, tim
 		oldState := server.Status.State
 		server.Status.TransitionTo(models.StatusStopped, "Process not running")
 		server.PID = nil
+
+		// Synchronously update discovery cache (BUG-001 fix)
+		if ls.discoveryService != nil {
+			ls.discoveryService.UpdateServer(server)
+			slog.Info("StopServer: Cache synchronized (process was not running)")
+		}
+
 		if ls.eventBus != nil {
 			ls.eventBus.Publish(events.ServerStatusChangedEvent(server.ID, oldState, models.StatusStopped))
 		}
@@ -143,6 +166,12 @@ func (ls *LifecycleService) StopServer(server *models.MCPServer, force bool, tim
 
 	// Clear PID
 	server.PID = nil
+
+	// Synchronously update discovery cache (BUG-001 fix)
+	if ls.discoveryService != nil {
+		ls.discoveryService.UpdateServer(server)
+		slog.Info("StopServer: Cache synchronized with stopped state")
+	}
 
 	// Publish status changed event
 	if ls.eventBus != nil {
@@ -243,6 +272,11 @@ func (ls *LifecycleService) monitorProcess(server *models.MCPServer, stopChan ch
 					server.Status.TransitionTo(models.StatusError, "Process exited unexpectedly")
 					server.PID = nil
 
+					// Synchronously update discovery cache (BUG-001 fix)
+					if ls.discoveryService != nil {
+						ls.discoveryService.UpdateServer(server)
+					}
+
 					if ls.eventBus != nil {
 						ls.eventBus.Publish(events.ServerStatusChangedEvent(server.ID, oldState, models.StatusError))
 					}
@@ -251,6 +285,11 @@ func (ls *LifecycleService) monitorProcess(server *models.MCPServer, stopChan ch
 					oldState := server.Status.State
 					server.Status.TransitionTo(models.StatusStopped, "Process exited")
 					server.PID = nil
+
+					// Synchronously update discovery cache (BUG-001 fix)
+					if ls.discoveryService != nil {
+						ls.discoveryService.UpdateServer(server)
+					}
 
 					if ls.eventBus != nil {
 						ls.eventBus.Publish(events.ServerStatusChangedEvent(server.ID, oldState, models.StatusStopped))
@@ -268,6 +307,11 @@ func (ls *LifecycleService) monitorProcess(server *models.MCPServer, stopChan ch
 				if time.Since(startTime) >= 500*time.Millisecond {
 					oldState := server.Status.State
 					server.Status.TransitionTo(models.StatusRunning, "Server started successfully")
+
+					// Synchronously update discovery cache (BUG-001 fix)
+					if ls.discoveryService != nil {
+						ls.discoveryService.UpdateServer(server)
+					}
 
 					if ls.eventBus != nil {
 						ls.eventBus.Publish(events.ServerStatusChangedEvent(server.ID, oldState, models.StatusRunning))

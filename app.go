@@ -73,7 +73,8 @@ func (a *App) startup(ctx context.Context) {
 	a.discoveryService = discovery.NewDiscoveryService(pathResolver, a.eventBus)
 	slog.Info("Discovery service initialized")
 
-	a.lifecycleService = lifecycle.NewLifecycleService(processManager, a.eventBus)
+	// Initialize lifecycle service with discovery service dependency (BUG-001 fix)
+	a.lifecycleService = lifecycle.NewLifecycleService(processManager, a.discoveryService, a.eventBus)
 	slog.Info("Lifecycle service initialized")
 
 	configService, err := config.NewConfigService(a.eventBus)
