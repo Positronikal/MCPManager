@@ -73,7 +73,8 @@ func (a *App) startup(ctx context.Context) {
 	a.discoveryService = discovery.NewDiscoveryService(pathResolver, a.eventBus)
 	slog.Info("Discovery service initialized")
 
-	a.lifecycleService = lifecycle.NewLifecycleService(processManager, a.eventBus)
+	// Initialize lifecycle service with discovery service dependency (BUG-001 fix)
+	a.lifecycleService = lifecycle.NewLifecycleService(processManager, a.discoveryService, a.eventBus)
 	slog.Info("Lifecycle service initialized")
 
 	configService, err := config.NewConfigService(a.eventBus)
@@ -121,6 +122,14 @@ func (a *App) shutdown(ctx context.Context) {
 	if a.lifecycleService != nil {
 		slog.Info("Stopping managed servers...")
 		a.lifecycleService.StopAll()
+	}
+
+	// Close discovery service (stops file watcher - FR-050)
+	if a.discoveryService != nil {
+		slog.Info("Closing discovery service...")
+		if err := a.discoveryService.Close(); err != nil {
+			slog.Warn("Failed to close discovery service", "error", err)
+		}
 	}
 
 	// Close EventBus

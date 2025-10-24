@@ -19,12 +19,62 @@
     // Mark as connected (Wails IPC is always available when running)
     isConnected.set(true);
     refreshDiscovery();
+
+    // FR-046: Setup keyboard shortcuts
+    window.addEventListener('keydown', handleKeyboardShortcut);
   });
 
   // Cleanup Wails event listeners on unmount
   onDestroy(() => {
     cleanupWailsEvents();
+    // FR-046: Cleanup keyboard shortcuts
+    window.removeEventListener('keydown', handleKeyboardShortcut);
   });
+
+  // FR-046: Handle keyboard shortcuts
+  function handleKeyboardShortcut(event: KeyboardEvent) {
+    // F5 or Ctrl+R: Refresh discovery
+    if (event.key === 'F5' || (event.ctrlKey && event.key === 'r')) {
+      event.preventDefault();
+      refreshDiscovery();
+      return;
+    }
+
+    // All other shortcuts require Ctrl key
+    if (!event.ctrlKey) return;
+
+    // Prevent default browser shortcuts
+    switch (event.key) {
+      case 's':
+      case 'x':
+      case 'q':
+        event.preventDefault();
+        break;
+    }
+
+    // Shortcuts that require a selected server
+    // Note: These would need to be implemented with server actions
+    // For now, show notification about available shortcuts
+    if (event.key === 'h') {
+      event.preventDefault();
+      showKeyboardShortcutsHelp();
+    }
+  }
+
+  // Show keyboard shortcuts help
+  function showKeyboardShortcutsHelp() {
+    const shortcuts = [
+      'F5 / Ctrl+R: Refresh server discovery',
+      'Ctrl+H: Show keyboard shortcuts',
+    ];
+    notifications.update(n => [...n, {
+      id: crypto.randomUUID(),
+      type: 'info',
+      message: 'Keyboard Shortcuts:\n' + shortcuts.join('\n'),
+      timestamp: Date.now(),
+      duration: 8000
+    }]);
+  }
 
   // Refresh discovery - triggers server scan
   async function refreshDiscovery() {

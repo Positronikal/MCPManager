@@ -124,6 +124,14 @@ func (a *App) shutdown(ctx context.Context) {
 		a.lifecycleService.StopAll()
 	}
 
+	// Close discovery service (stops file watcher - FR-050)
+	if a.discoveryService != nil {
+		slog.Info("Closing discovery service...")
+		if err := a.discoveryService.Close(); err != nil {
+			slog.Warn("Failed to close discovery service", "error", err)
+		}
+	}
+
 	// Close EventBus
 	if a.eventBus != nil {
 		slog.Info("Closing EventBus...")

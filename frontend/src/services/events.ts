@@ -102,7 +102,7 @@ function handleServerDiscovered(data: any) {
 /**
  * Handle server status changed event
  */
-function handleServerStatusChanged(data: any) {
+async function handleServerStatusChanged(data: any) {
   // Backend sends: { serverID, oldState, newState }
   if (data && data.serverID) {
     const serverId = data.serverID;
@@ -111,6 +111,17 @@ function handleServerStatusChanged(data: any) {
 
     if (oldState !== newState) {
       addNotification('info', `Server ${serverId}: ${oldState} → ${newState}`);
+
+      // FR-005/FR-047: Fetch updated server and update store for real-time UI update
+      try {
+        const { GetServer } = await import('../../wailsjs/go/main/App');
+        const updatedServer = await GetServer(serverId);
+        if (updatedServer) {
+          updateServer(updatedServer);
+        }
+      } catch (error) {
+        console.error('Failed to fetch updated server:', error);
+      }
     }
   }
 }
@@ -153,11 +164,13 @@ function handleServerMetricsUpdated(data: any) {
 
 /**
  * Handle server config updated event
+ * FR-050: Notify user of external config changes and prompt to refresh
  */
 function handleServerConfigUpdated(data: any) {
   // Backend sends: { filePath }
   if (data && data.filePath) {
-    const filePath = data.filePath;
-    addNotification('info', `Configuration file changed: ${filePath}`);
+    const fileName = data.filePath.split(/[/\\]/).pop() || data.filePath;
+    // FR-050: Provide option to refresh discovery results
+    addNotification('warning', `Configuration file changed (${fileName}). Click Refresh to update server list.`, 10000);
   }
 }

@@ -18,6 +18,7 @@ type DiscoveryService struct {
 	extensionsDiscovery   *ClaudeExtensionsDiscovery
 	filesystemDiscovery   *FilesystemDiscovery
 	processDiscovery      *ProcessDiscovery
+	configFileWatcher     *ConfigFileWatcher // FR-050: Monitor config files for external changes
 	eventBus              *events.EventBus
 	mu                    sync.RWMutex
 	cachedServers         map[string]*models.MCPServer // serverID -> server
@@ -26,11 +27,31 @@ type DiscoveryService struct {
 
 // NewDiscoveryService creates a new discovery service
 func NewDiscoveryService(pathResolver platform.PathResolver, eventBus *events.EventBus) *DiscoveryService {
+	// FR-050: Get config file paths to watch
+	configDir := pathResolver.GetConfigDir()
+	configPaths := []string{
+		fmt.Sprintf("%s/Claude/claude_desktop_config.json", configDir),
+		fmt.Sprintf("%s/Cursor/mcp_config.json", configDir),
+	}
+
+	// FR-050: Initialize file watcher for client config files
+	watcher, err := NewConfigFileWatcher(eventBus, configPaths)
+	if err != nil {
+		// Log error but continue - file watching is non-critical
+		fmt.Printf("Warning: Failed to create config file watcher: %v\n", err)
+	} else {
+		// Start watching
+		if err := watcher.Start(); err != nil {
+			fmt.Printf("Warning: Failed to start config file watcher: %v\n", err)
+		}
+	}
+
 	return &DiscoveryService{
 		clientConfigDiscovery: NewClientConfigDiscovery(pathResolver, eventBus),
 		extensionsDiscovery:   NewClaudeExtensionsDiscovery(pathResolver, eventBus),
 		filesystemDiscovery:   NewFilesystemDiscovery(pathResolver, eventBus),
 		processDiscovery:      NewProcessDiscovery(eventBus),
+		configFileWatcher:     watcher,
 		eventBus:              eventBus,
 		cachedServers:         make(map[string]*models.MCPServer),
 		lastDiscovery:         time.Time{},
@@ -427,4 +448,12 @@ func (ds *DiscoveryService) RemoveServer(serverID string) {
 	defer ds.mu.Unlock()
 
 	delete(ds.cachedServers, serverID)
+}
+
+// Close stops the file watcher and cleans up resources (FR-050)
+func (ds *DiscoveryService) Close() error {
+	if ds.configFileWatcher != nil {
+		return ds.configFileWatcher.Stop()
+	}
+	return nil
 }
