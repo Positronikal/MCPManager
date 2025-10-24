@@ -7,24 +7,23 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/hoytech/mcpmanager/internal/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestPostServersDiscover_ContractValidation tests POST /api/v1/servers/discover endpoint
-// This is a failing test that defines the API contract per api-spec.yaml
+// This validates the API contract per api-spec.yaml
 func TestPostServersDiscover_ContractValidation(t *testing.T) {
-	t.Run("should return 202 Accepted with scanId", func(t *testing.T) {
-		// Create test HTTP server (no implementation yet, should fail)
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// This will be implemented in T-D009
-			w.WriteHeader(http.StatusNotImplemented)
-		})
+	services := createTestRouter()
+	router := api.NewRouter(services)
+	defer services.EventBus.Close()
 
+	t.Run("should return 202 Accepted with scanId", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/servers/discover", nil)
 		w := httptest.NewRecorder()
 
-		handler.ServeHTTP(w, req)
+		router.ServeHTTP(w, req)
 
 		// Assert status 202 Accepted (asynchronous operation)
 		assert.Equal(t, http.StatusAccepted, w.Code, "Expected status 202 Accepted")
@@ -49,48 +48,33 @@ func TestPostServersDiscover_ContractValidation(t *testing.T) {
 	})
 
 	t.Run("should accept POST method only", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// This will be implemented in T-D009
-			w.WriteHeader(http.StatusNotImplemented)
-		})
-
 		// Verify request method is POST
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/servers/discover", nil)
 		assert.Equal(t, http.MethodPost, req.Method, "Method should be POST")
 
 		w := httptest.NewRecorder()
-		handler.ServeHTTP(w, req)
+		router.ServeHTTP(w, req)
 
-		// GET, PUT, DELETE should not be allowed (will be enforced by router)
-		// This test just validates the contract expects POST
+		// Should return 202 for POST
+		assert.Equal(t, http.StatusAccepted, w.Code, "POST should be accepted")
 	})
 
 	t.Run("should not require request body", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// This will be implemented in T-D009
-			w.WriteHeader(http.StatusNotImplemented)
-		})
-
 		// POST with no body should be valid
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/servers/discover", nil)
 		w := httptest.NewRecorder()
 
-		handler.ServeHTTP(w, req)
+		router.ServeHTTP(w, req)
 
 		// Should still return 202 (no 400 Bad Request for missing body)
 		assert.Equal(t, http.StatusAccepted, w.Code, "Should accept POST without body")
 	})
 
 	t.Run("response should include both required fields", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// This will be implemented in T-D009
-			w.WriteHeader(http.StatusNotImplemented)
-		})
-
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/servers/discover", nil)
 		w := httptest.NewRecorder()
 
-		handler.ServeHTTP(w, req)
+		router.ServeHTTP(w, req)
 
 		var response map[string]interface{}
 		err := json.NewDecoder(w.Body).Decode(&response)
@@ -106,11 +90,6 @@ func TestPostServersDiscover_ContractValidation(t *testing.T) {
 	})
 
 	t.Run("should return unique scanId for each request", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// This will be implemented in T-D009
-			w.WriteHeader(http.StatusNotImplemented)
-		})
-
 		// Make two sequential requests
 		var scanIds []string
 
@@ -118,7 +97,7 @@ func TestPostServersDiscover_ContractValidation(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/servers/discover", nil)
 			w := httptest.NewRecorder()
 
-			handler.ServeHTTP(w, req)
+			router.ServeHTTP(w, req)
 
 			var response struct {
 				ScanID string `json:"scanId"`
@@ -130,25 +109,23 @@ func TestPostServersDiscover_ContractValidation(t *testing.T) {
 			}
 		}
 
-		// If we got two scanIds, they should be different
-		if len(scanIds) == 2 {
-			assert.NotEqual(t, scanIds[0], scanIds[1], "Each discovery scan should have a unique scanId")
-		}
+		// Should have got two scanIds, and they should be different
+		require.Len(t, scanIds, 2, "Should have received 2 scanIds")
+		assert.NotEqual(t, scanIds[0], scanIds[1], "Each discovery scan should have a unique scanId")
 	})
 }
 
 // TestPostServersDiscover_ErrorHandling tests error cases
 func TestPostServersDiscover_ErrorHandling(t *testing.T) {
-	t.Run("should handle 500 Internal Server Error", func(t *testing.T) {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// This will be implemented in T-D009
-			w.WriteHeader(http.StatusNotImplemented)
-		})
+	services := createTestRouter()
+	router := api.NewRouter(services)
+	defer services.EventBus.Close()
 
+	t.Run("should handle 500 Internal Server Error", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/servers/discover", nil)
 		w := httptest.NewRecorder()
 
-		handler.ServeHTTP(w, req)
+		router.ServeHTTP(w, req)
 
 		// If an internal error occurs, it should return 500
 		// The contract allows for 500 responses per api-spec.yaml

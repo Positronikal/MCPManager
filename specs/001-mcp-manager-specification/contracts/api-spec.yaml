@@ -51,7 +51,7 @@ paths:
           description: Filter by discovery source
           schema:
             type: string
-            enum: [client_config, filesystem, process]
+            enum: [client_config, extension, filesystem, process]
       responses:
         '200':
           description: List of servers
