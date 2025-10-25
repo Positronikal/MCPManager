@@ -28,7 +28,8 @@
       "Read(//c/Users/hoyth/AppData/Roaming/Claude/Claude Extensions Settings/**)",
       "Read(//c/Users/hoyth/AppData/Roaming/Claude/Claude Extensions/**)",
       "Bash(cat:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []
