@@ -3,6 +3,7 @@
   import { api } from '../services/api';
   import type { MCPServer } from '../stores/stores';
   import ConfigurationEditor from './ConfigurationEditor.svelte';
+  import DetailedLogsView from './DetailedLogsView.svelte';
   import { onMount } from 'svelte';
 
   // Loading states for individual servers
@@ -12,6 +13,10 @@
   let showConfigEditor = false;
   let configEditorServerId: string | null = null;
   let configEditorServerName: string | null = null;
+
+  // Detailed logs view state
+  let showDetailedLogs = false;
+  let detailedLogsServerId: string | null = null;
   
   // Fetch servers on component mount
   onMount(async () => {
@@ -98,11 +103,17 @@
     configEditorServerName = null;
   }
 
-  // Handle opening logs panel
+  // Handle opening detailed logs view
   function openLogs(server: MCPServer) {
     selectedServerId.set(server.id);
-    addNotification('info', `Viewing logs for ${server.name}`);
-    // TODO: T-E008 will implement log filtering
+    detailedLogsServerId = server.id;
+    showDetailedLogs = true;
+  }
+
+  // Handle closing detailed logs view
+  function closeDetailedLogs() {
+    showDetailedLogs = false;
+    detailedLogsServerId = null;
   }
 
   // Get button text based on loading state
@@ -300,6 +311,14 @@
     serverId={configEditorServerId}
     serverName={configEditorServerName}
     onClose={closeConfigEditor}
+  />
+{/if}
+
+<!-- Detailed Logs View Modal -->
+{#if showDetailedLogs && detailedLogsServerId}
+  <DetailedLogsView
+    serverId={detailedLogsServerId}
+    onClose={closeDetailedLogs}
   />
 {/if}
 
