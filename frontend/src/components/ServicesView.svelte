@@ -20,6 +20,8 @@
   let loading = false;
   let error = '';
   let searchQuery = '';
+  let searchInput = ''; // Temporary input value for debouncing
+  let searchTimeout: number | null = null;
   let statusFilter: string | null = null;
 
   // Mock data for demonstration
@@ -130,6 +132,20 @@
         return '⚪';
     }
   }
+
+  // T-E025: Debounce search input (300ms) for UI responsiveness
+  function handleSearchInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    searchInput = target.value;
+
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    searchTimeout = window.setTimeout(() => {
+      searchQuery = searchInput;
+    }, 300);
+  }
 </script>
 
 <div class="services-view">
@@ -150,7 +166,8 @@
       <input
         type="search"
         class="search-input"
-        bind:value={searchQuery}
+        value={searchInput}
+        on:input={handleSearchInput}
         placeholder="Search services..."
       />
       <button

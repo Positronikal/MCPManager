@@ -7,6 +7,8 @@
   let filterServerId: string | null = null;
   let filterSeverity: LogSeverity | null = null;
   let searchQuery = '';
+  let searchInput = ''; // Temporary input value for debouncing
+  let searchTimeout: number | null = null;
   let autoScroll = true;
 
   // Log container reference for auto-scroll
@@ -109,6 +111,20 @@
   function selectLog(log: LogEntry & { serverId: string }) {
     selectedServerId.set(log.serverId);
   }
+
+  // T-E025: Debounce search input (300ms) for UI responsiveness
+  function handleSearchInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    searchInput = target.value;
+
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    searchTimeout = window.setTimeout(() => {
+      searchQuery = searchInput;
+    }, 300);
+  }
 </script>
 
 <div class="log-viewer">
@@ -146,7 +162,8 @@
       <input
         type="search"
         class="search-input"
-        bind:value={searchQuery}
+        value={searchInput}
+        on:input={handleSearchInput}
         placeholder="Search logs..."
       />
 

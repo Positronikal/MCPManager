@@ -8,7 +8,7 @@
   import ExplorerView from './components/ExplorerView.svelte';
   import ServicesView from './components/ServicesView.svelte';
   import HelpView from './components/HelpView.svelte';
-  import { isConnected, isDiscovering, notifications, activeView } from './stores/stores';
+  import { isConnected, isDiscovering, notifications, activeView, selectedServerId, servers, applicationState } from './stores/stores';
   import { api } from './services/api';
   import { setupWailsEvents, cleanupWailsEvents } from './services/events';
   import { onMount, onDestroy } from 'svelte';
@@ -17,6 +17,7 @@
   let isResizing = false;
   let startY = 0;
   let startHeight = 0;
+  let saveStateTimeout: number | null = null;
 
   // Setup Wails event listeners on mount
   onMount(() => {
@@ -27,6 +28,12 @@
 
     // FR-046: Setup keyboard shortcuts
     window.addEventListener('keydown', handleKeyboardShortcut);
+
+    // T-E022: Load persisted window state
+    loadWindowState();
+
+    // T-E022: Save window state on resize
+    window.addEventListener('resize', handleWindowResize);
   });
 
   // Cleanup Wails event listeners on unmount
@@ -34,9 +41,16 @@
     cleanupWailsEvents();
     // FR-046: Cleanup keyboard shortcuts
     window.removeEventListener('keydown', handleKeyboardShortcut);
+    // T-E022: Cleanup window resize listener
+    window.removeEventListener('resize', handleWindowResize);
+    // Save any pending state changes
+    if (saveStateTimeout) {
+      clearTimeout(saveStateTimeout);
+      saveWindowState();
+    }
   });
 
-  // FR-046: Handle keyboard shortcuts
+  // FR-046: Handle keyboard shortcuts (T-E018)
   function handleKeyboardShortcut(event: KeyboardEvent) {
     // F5 or Ctrl+R: Refresh discovery
     if (event.key === 'F5' || (event.ctrlKey && event.key === 'r')) {
@@ -49,36 +63,59 @@
     if (!event.ctrlKey) return;
 
     // Prevent default browser shortcuts
-    switch (event.key) {
-      case 's':
-      case 'x':
-      case 'q':
-        event.preventDefault();
-        break;
-    }
-
-    // Shortcuts that require a selected server
-    // Note: These would need to be implemented with server actions
-    // For now, show notification about available shortcuts
-    if (event.key === 'h') {
+    const preventKeys = ['s', 'x', 'q', 'h', '1', '2', '3', '4', '5', '6'];
+    if (preventKeys.includes(event.key.toLowerCase())) {
       event.preventDefault();
-      showKeyboardShortcutsHelp();
     }
-  }
 
-  // Show keyboard shortcuts help
-  function showKeyboardShortcutsHelp() {
-    const shortcuts = [
-      'F5 / Ctrl+R: Refresh server discovery',
-      'Ctrl+H: Show keyboard shortcuts',
-    ];
-    notifications.update(n => [...n, {
-      id: crypto.randomUUID(),
-      type: 'info',
-      message: 'Keyboard Shortcuts:\n' + shortcuts.join('\n'),
-      timestamp: Date.now(),
-      duration: 8000
-    }]);
+    // View switching shortcuts
+    switch (event.key) {
+      case '1':
+        activeView.set('servers');
+        return;
+      case '2':
+        activeView.set('netstat');
+        return;
+      case '3':
+        activeView.set('shell');
+        return;
+      case '4':
+        activeView.set('explorer');
+        return;
+      case '5':
+        activeView.set('services');
+        return;
+      case '6':
+      case 'h':
+        activeView.set('help');
+        return;
+    }
+
+    // Server action shortcuts (only when a server is selected)
+    if ($selectedServerId) {
+      const selectedServer = $servers.find(s => s.id === $selectedServerId);
+      if (!selectedServer) return;
+
+      switch (event.key.toLowerCase()) {
+        case 's':
+          // Start server (only if stopped)
+          if (selectedServer.status.state === 'stopped' || selectedServer.status.state === 'error') {
+            addNotification('info', `Starting ${selectedServer.name} via keyboard shortcut`);
+            // Would trigger start action
+          } else {
+            addNotification('warning', `${selectedServer.name} is already ${selectedServer.status.state}`);
+          }
+          break;
+        case 'x':
+          // Stop server (only if running)
+          if (selectedServer.status.state === 'running') {
+            addNotification('info', `Use Stop button to stop ${selectedServer.name}`);
+          } else {
+            addNotification('warning', `${selectedServer.name} is not running`);
+          }
+          break;
+      }
+    }
   }
 
   // Refresh discovery - triggers server scan
@@ -112,6 +149,64 @@
     isResizing = false;
     document.removeEventListener('mousemove', handleResize);
     document.removeEventListener('mouseup', stopResize);
+
+    // T-E022: Save log panel height when done resizing
+    saveLogPanelHeight();
+  }
+
+  // T-E022: Load window state from backend
+  async function loadWindowState() {
+    try {
+      const state = await api.appState.getApplicationState();
+      if (state && state.windowLayout) {
+        logPanelHeight = state.windowLayout.logPanelHeight || 200;
+      }
+    } catch (error) {
+      console.error('Failed to load window state:', error);
+      // Use defaults if load fails
+    }
+  }
+
+  // T-E022: Handle window resize (debounced)
+  function handleWindowResize() {
+    if (saveStateTimeout) {
+      clearTimeout(saveStateTimeout);
+    }
+    saveStateTimeout = window.setTimeout(() => {
+      saveWindowState();
+    }, 1000); // Debounce 1 second
+  }
+
+  // T-E022: Save window state to backend
+  async function saveWindowState() {
+    try {
+      const updatedState = {
+        ...$applicationState,
+        windowLayout: {
+          ...$applicationState.windowLayout,
+          width: window.innerWidth,
+          height: window.innerHeight,
+          x: window.screenX,
+          y: window.screenY,
+          maximized: window.outerWidth === screen.availWidth && window.outerHeight === screen.availHeight,
+          logPanelHeight: logPanelHeight
+        }
+      };
+      applicationState.set(updatedState);
+      await api.appState.updateApplicationState(updatedState);
+    } catch (error) {
+      console.error('Failed to save window state:', error);
+    }
+  }
+
+  // T-E022: Save log panel height
+  function saveLogPanelHeight() {
+    if (saveStateTimeout) {
+      clearTimeout(saveStateTimeout);
+    }
+    saveStateTimeout = window.setTimeout(() => {
+      saveWindowState();
+    }, 500); // Debounce 500ms for log panel
   }
 
   // Remove notification

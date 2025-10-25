@@ -8,6 +8,8 @@
   // Backend would launch: explorer (Windows), open (macOS), xdg-open (Linux)
 
   let searchQuery = '';
+  let searchInput = ''; // Temporary input value for debouncing
+  let searchTimeout: number | null = null;
   let selectedSource: string | null = null;
 
   // Filter servers by search and source
@@ -54,6 +56,20 @@
     const lastSlash = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
     return lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
   }
+
+  // T-E025: Debounce search input (300ms) for UI responsiveness
+  function handleSearchInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    searchInput = target.value;
+
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    searchTimeout = window.setTimeout(() => {
+      searchQuery = searchInput;
+    }, 300);
+  }
 </script>
 
 <div class="explorer-view">
@@ -74,7 +90,8 @@
       <input
         type="search"
         class="search-input"
-        bind:value={searchQuery}
+        value={searchInput}
+        on:input={handleSearchInput}
         placeholder="Search servers..."
       />
     </div>

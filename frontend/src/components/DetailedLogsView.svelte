@@ -13,6 +13,8 @@
   let filteredLogs: LogEntry[] = [];
   let severityFilter: LogSeverity | null = null;
   let searchQuery = '';
+  let searchInput = ''; // Temporary input value for debouncing
+  let searchTimeout: number | null = null;
   let loading = true;
   let errorMessage = '';
   let limit = 100;
@@ -147,6 +149,20 @@
   $: if (filteredLogs.length > 0) {
     setTimeout(scrollToBottom, 100);
   }
+
+  // T-E025: Debounce search input (300ms) for UI responsiveness
+  function handleSearchInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    searchInput = target.value;
+
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    searchTimeout = window.setTimeout(() => {
+      searchQuery = searchInput;
+    }, 300);
+  }
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -183,7 +199,8 @@
       <input
         type="search"
         class="search-input"
-        bind:value={searchQuery}
+        value={searchInput}
+        on:input={handleSearchInput}
         placeholder="Search logs..."
       />
 
