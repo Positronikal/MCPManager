@@ -177,6 +177,9 @@ export const isDiscovering: Writable<boolean> = writable(false);
 export const isConnected: Writable<boolean> = writable(false);
 export const lastEventId: Writable<string | null> = writable(null);
 
+// Active view for main content area
+export const activeView: Writable<string> = writable('servers'); // servers, netstat, shell, explorer, services, help
+
 // Derived store for selected server
 export const selectedServer = derived(
   [servers, selectedServerId],

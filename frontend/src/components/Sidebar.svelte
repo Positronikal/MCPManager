@@ -1,11 +1,9 @@
 <script lang="ts">
-  import { selectedServerId, serverFilters, servers, addNotification } from '../stores/stores';
+  import { selectedServerId, servers, addNotification, activeView } from '../stores/stores';
   import { BrowserOpenURL } from '../../wailsjs/runtime/runtime';
 
-  let activeView = 'servers';
-
   function setView(view: string) {
-    activeView = view;
+    activeView.set(view);
   }
 
   // FR-032: Open server installation directory in system file explorer
@@ -33,21 +31,29 @@
     // This would be better implemented as a backend API method
   }
 
-  // FR-030: Show network connections (would open a netstat view)
+  // FR-030: Show network connections
   function showNetstat() {
-    addNotification('info', 'Netstat view coming soon');
-    // This would show a modal with network connections for MCP servers
+    setView('netstat');
+  }
+
+  // FR-031: Show shell launcher
+  function showShell() {
+    setView('shell');
+  }
+
+  // FR-032: Show explorer view
+  function showExplorer() {
+    setView('explorer');
   }
 
   // FR-033: Show system services
   function showServices() {
-    addNotification('info', 'Services view coming soon');
-    // This would show system services related to MCP servers
+    setView('services');
   }
 
   // FR-034: Show help and documentation
   function showHelp() {
-    BrowserOpenURL('https://github.com/hoytech/mcpmanager/blob/main/README.md');
+    setView('help');
   }
 </script>
 
@@ -57,22 +63,10 @@
   </div>
 
   <ul class="nav-menu">
-    <li class:active={activeView === 'servers'}>
+    <li class:active={$activeView === 'servers'}>
       <button on:click={() => setView('servers')}>
         <span class="nav-icon">🖥️</span>
         <span class="nav-label">Servers</span>
-      </button>
-    </li>
-    <li class:active={activeView === 'logs'}>
-      <button on:click={() => setView('logs')}>
-        <span class="nav-icon">📋</span>
-        <span class="nav-label">Logs</span>
-      </button>
-    </li>
-    <li class:active={activeView === 'settings'}>
-      <button on:click={() => setView('settings')}>
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-label">Settings</span>
       </button>
     </li>
   </ul>
@@ -88,13 +82,13 @@
         </button>
       </li>
       <li>
-        <button on:click={openShell} title="FR-031: Open terminal">
+        <button on:click={showShell} title="FR-031: Shell launcher">
           <span class="nav-icon">💻</span>
           <span class="nav-label">Shell</span>
         </button>
       </li>
       <li>
-        <button on:click={openExplorer} title="FR-032: Open server directory">
+        <button on:click={showExplorer} title="FR-032: Open server directories">
           <span class="nav-icon">📁</span>
           <span class="nav-label">Explorer</span>
         </button>

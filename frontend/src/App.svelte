@@ -3,7 +3,12 @@
   import ServerTable from './components/ServerTable.svelte';
   import LogViewer from './components/LogViewer.svelte';
   import Sidebar from './components/Sidebar.svelte';
-  import { isConnected, isDiscovering, notifications } from './stores/stores';
+  import NetstatView from './components/NetstatView.svelte';
+  import ShellView from './components/ShellView.svelte';
+  import ExplorerView from './components/ExplorerView.svelte';
+  import ServicesView from './components/ServicesView.svelte';
+  import HelpView from './components/HelpView.svelte';
+  import { isConnected, isDiscovering, notifications, activeView } from './stores/stores';
   import { api } from './services/api';
   import { setupWailsEvents, cleanupWailsEvents } from './services/events';
   import { onMount, onDestroy } from 'svelte';
@@ -145,7 +150,21 @@
   <div class="main-content">
     <Sidebar />
     <div class="content-area">
-      <ServerTable />
+      {#if $activeView === 'servers'}
+        <ServerTable />
+      {:else if $activeView === 'netstat'}
+        <NetstatView />
+      {:else if $activeView === 'shell'}
+        <ShellView />
+      {:else if $activeView === 'explorer'}
+        <ExplorerView />
+      {:else if $activeView === 'services'}
+        <ServicesView />
+      {:else if $activeView === 'help'}
+        <HelpView />
+      {:else}
+        <ServerTable />
+      {/if}
     </div>
   </div>
 
