@@ -121,46 +121,14 @@ export const serverFilters: Writable<ServerFilters> = writable({
   searchQuery: ''
 });
 
-// Derived store for selected server
-export const selectedServer = derived(
-  [servers, selectedServerId],
-  ([$servers, $selectedServerId]) => {
-    if (!$selectedServerId) return null;
-    return $servers.find(s => s.id === $selectedServerId) || null;
-  }
-);
-
-// Derived store for filtered servers
-export const filteredServers = derived(
-  [servers, serverFilters],
-  ([$servers, $filters]) => {
-    let result = $servers;
-
-    // Filter by status
-    if ($filters.status) {
-      result = result.filter(s => s.status.state === $filters.status);
-    }
-
-    // Filter by source
-    if ($filters.source) {
-      result = result.filter(s => s.source === $filters.source);
-    }
-
-    // Filter by search query
-    if ($filters.searchQuery) {
-      const query = $filters.searchQuery.toLowerCase();
-      result = result.filter(s =>
-        s.name.toLowerCase().includes(query) ||
-        s.installationPath.toLowerCase().includes(query)
-      );
-    }
-
-    return result;
-  }
-);
-
 // Logs store (per-server logs)
 export const serverLogs: Writable<Record<string, LogEntry[]>> = writable({});
+
+// Global logs store (all logs aggregated)
+export const logs: Writable<LogEntry[]> = writable([]);
+
+// Selected severity for log filtering
+export const selectedSeverity: Writable<LogSeverity | null> = writable(null);
 
 // Metrics store (per-server metrics)
 export const serverMetrics: Writable<Record<string, ServerMetrics>> = writable({});
@@ -208,6 +176,72 @@ export const isDiscovering: Writable<boolean> = writable(false);
 // SSE connection state
 export const isConnected: Writable<boolean> = writable(false);
 export const lastEventId: Writable<string | null> = writable(null);
+
+// Derived store for selected server
+export const selectedServer = derived(
+  [servers, selectedServerId],
+  ([$servers, $selectedServerId]) => {
+    if (!$selectedServerId) return null;
+    return $servers.find(s => s.id === $selectedServerId) || null;
+  }
+);
+
+// Derived store for filtered servers
+export const filteredServers = derived(
+  [servers, serverFilters],
+  ([$servers, $filters]) => {
+    let result = $servers;
+
+    // Filter by status
+    if ($filters.status) {
+      result = result.filter(s => s.status.state === $filters.status);
+    }
+
+    // Filter by source
+    if ($filters.source) {
+      result = result.filter(s => s.source === $filters.source);
+    }
+
+    // Filter by search query
+    if ($filters.searchQuery) {
+      const query = $filters.searchQuery.toLowerCase();
+      result = result.filter(s =>
+        s.name.toLowerCase().includes(query) ||
+        s.installationPath.toLowerCase().includes(query)
+      );
+    }
+
+    return result;
+  }
+);
+
+// Derived store for filtered logs (per Phase E directive)
+export const filteredLogs = derived(
+  [logs, selectedServerId, selectedSeverity, applicationState],
+  ([$logs, $selectedServerId, $selectedSeverity, $appState]) => {
+    return $logs.filter(log => {
+      // Filter by selected server
+      if ($selectedServerId && log.serverId !== $selectedServerId) return false;
+
+      // Filter by selected severity
+      if ($selectedSeverity && log.severity !== $selectedSeverity) return false;
+
+      // Filter by search query
+      if ($appState.serverFilters.searchQuery) {
+        const query = $appState.serverFilters.searchQuery.toLowerCase();
+        if (!log.message.toLowerCase().includes(query)) return false;
+      }
+
+      return true;
+    });
+  }
+);
+
+// Derived store for running servers
+export const runningServers = derived(
+  servers,
+  $servers => $servers.filter(s => s.status.state === 'running')
+);
 
 // Helper functions for notifications
 export function addNotification(type: Notification['type'], message: string, duration = 5000) {
@@ -265,16 +299,27 @@ export function updateServerStatus(serverId: string, status: ServerStatus) {
 
 // Helper functions for logs
 export function addLog(serverId: string, log: LogEntry) {
-  serverLogs.update(logs => {
-    if (!logs[serverId]) {
-      logs[serverId] = [];
+  // Update per-server logs
+  serverLogs.update(logsMap => {
+    if (!logsMap[serverId]) {
+      logsMap[serverId] = [];
     }
-    logs[serverId].push(log);
+    logsMap[serverId].push(log);
     // Keep only last 1000 logs per server
-    if (logs[serverId].length > 1000) {
-      logs[serverId] = logs[serverId].slice(-1000);
+    if (logsMap[serverId].length > 1000) {
+      logsMap[serverId] = logsMap[serverId].slice(-1000);
     }
-    return logs;
+    return logsMap;
+  });
+
+  // Update global logs store
+  logs.update(globalLogs => {
+    const updatedLogs = [...globalLogs, log];
+    // Keep only last 1000 logs globally
+    if (updatedLogs.length > 1000) {
+      return updatedLogs.slice(-1000);
+    }
+    return updatedLogs;
   });
 }
 

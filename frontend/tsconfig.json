@@ -6,10 +6,15 @@
     "module": "ESNext",
     "resolveJsonModule": true,
     "allowJs": true,
-    "checkJs": true,
+    "checkJs": false,
     "isolatedModules": true,
-    "moduleDetection": "force"
+    "moduleDetection": "force",
+    "strict": true,
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
+  "exclude": ["wailsjs/**/*"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
