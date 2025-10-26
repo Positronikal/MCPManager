@@ -278,11 +278,12 @@ export function updateServer(server: MCPServer) {
   servers.update(s => {
     const index = s.findIndex(srv => srv.id === server.id);
     if (index !== -1) {
-      s[index] = server;
+      // Create new array with updated server to trigger reactivity
+      return [...s.slice(0, index), server, ...s.slice(index + 1)];
     } else {
-      s.push(server);
+      // Create new array with added server to trigger reactivity
+      return [...s, server];
     }
-    return s;
   });
 }
 
@@ -292,9 +293,12 @@ export function removeServer(serverId: string) {
 
 export function updateServerStatus(serverId: string, status: ServerStatus) {
   servers.update(s => {
-    const server = s.find(srv => srv.id === serverId);
-    if (server) {
-      server.status = status;
+    const index = s.findIndex(srv => srv.id === serverId);
+    if (index !== -1) {
+      // Create new server object with updated status
+      const updatedServer = { ...s[index], status };
+      // Create new array with updated server to trigger reactivity
+      return [...s.slice(0, index), updatedServer, ...s.slice(index + 1)];
     }
     return s;
   });

@@ -78,7 +78,7 @@ describe('ServerTable Component', () => {
   describe('Rendering', () => {
     it('should render empty state when no servers', () => {
       render(ServerTable);
-      expect(screen.getByText(/no mcp servers/i)).toBeInTheDocument();
+      expect(screen.getByText(/no servers found/i)).toBeInTheDocument();
     });
 
     it('should render server table with servers', () => {
@@ -107,39 +107,32 @@ describe('ServerTable Component', () => {
     });
   });
 
-  describe('Filtering', () => {
+  describe('Display and interaction', () => {
     beforeEach(() => {
       servers.set(mockServers);
     });
 
-    it('should filter servers by search query', async () => {
+    it('should display filtered servers from store', () => {
+      // Note: ServerTable displays filteredServers from store,
+      // filtering logic is handled by parent component (App.svelte)
       render(ServerTable);
 
-      const searchInput = screen.getByPlaceholderText(/search servers/i);
-      await fireEvent.input(searchInput, { target: { value: 'Server 1' } });
-
-      // Wait for debounce
-      await new Promise((resolve) => setTimeout(resolve, 350));
-
-      // Should show only Server 1
+      // Both servers should be visible when filteredServers contains them
       expect(screen.getByText('Test Server 1')).toBeInTheDocument();
+      expect(screen.getByText('Test Server 2')).toBeInTheDocument();
     });
 
-    it('should filter servers by source', async () => {
+    it('should show server count in footer', () => {
       render(ServerTable);
 
-      const sourceSelect = screen.getByRole('combobox', { name: /source/i }) as HTMLSelectElement;
-      if (!sourceSelect) {
-        // If not found by name, find by presence in document
-        const selects = document.querySelectorAll('select');
-        expect(selects.length).toBeGreaterThan(0);
-      }
+      // Check that footer shows correct count
+      expect(screen.getByText(/showing 2 of 2 servers/i)).toBeInTheDocument();
     });
 
-    it('should filter servers by status', () => {
+    it('should render table with proper structure', () => {
       render(ServerTable);
 
-      // Check that status filter controls exist
+      // Check that table element exists with proper role
       const table = screen.getByRole('table');
       expect(table).toBeInTheDocument();
     });

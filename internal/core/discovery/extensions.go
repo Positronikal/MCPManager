@@ -270,8 +270,20 @@ func (ced *ClaudeExtensionsDiscovery) resolveArgs(args []string, extensionPath s
 				// Look up in settings.UserConfig
 				if settings != nil && settings.UserConfig != nil {
 					if value, ok := settings.UserConfig[configKey]; ok {
-						// Convert value to string representation
-						resolvedArg = ced.userConfigValueToString(value)
+						// Check if value is an array - expand into multiple args
+						if arrayValue, isArray := value.([]interface{}); isArray {
+							// Array values expand into multiple arguments
+							for _, item := range arrayValue {
+								if str, ok := item.(string); ok {
+									resolved = append(resolved, str)
+								}
+							}
+							// Skip appending the template arg itself
+							continue
+						} else {
+							// Non-array value - convert to string
+							resolvedArg = ced.userConfigValueToString(value)
+						}
 					} else {
 						// Config key not found, skip this arg
 						continue
@@ -289,13 +301,15 @@ func (ced *ClaudeExtensionsDiscovery) resolveArgs(args []string, extensionPath s
 	return resolved
 }
 
-// userConfigValueToString converts a user config value to a string or comma-separated list
+// userConfigValueToString converts a user config value to a string
+// Note: Arrays are handled separately in resolveArgs() by expanding to multiple args
 func (ced *ClaudeExtensionsDiscovery) userConfigValueToString(value interface{}) string {
 	switch v := value.(type) {
 	case string:
 		return v
 	case []interface{}:
-		// Array - join with commas
+		// Arrays should not reach here - they're expanded in resolveArgs()
+		// But if they do, join with commas as fallback
 		strValues := make([]string, 0, len(v))
 		for _, item := range v {
 			if str, ok := item.(string); ok {

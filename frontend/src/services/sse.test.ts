@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SSEClient, getSSEClient, connectSSE, disconnectSSE } from './sse';
 import { get } from 'svelte/store';
-import { isConnected, notifications } from '../stores/stores';
+import { isConnected, notifications, servers } from '../stores/stores';
 
 // Mock EventSource
 class MockEventSource {
@@ -75,6 +75,7 @@ describe('SSE Client', () => {
     vi.clearAllMocks();
     isConnected.set(false);
     notifications.set([]);
+    servers.set([]);
     client = new SSEClient();
   });
 
@@ -138,6 +139,29 @@ describe('SSE Client', () => {
     });
 
     it('should handle server.status.changed events', async () => {
+      // Add a mock server to the store first
+      servers.set([{
+        id: 'server-1',
+        name: 'Test Server',
+        installationPath: '/path/to/server',
+        source: 'client_config',
+        status: {
+          state: 'stopped',
+          uptime: 0,
+          lastChecked: new Date().toISOString(),
+          lastStateChange: new Date().toISOString(),
+        },
+        configuration: {
+          autoStart: false,
+          restartOnCrash: false,
+          maxRestartAttempts: 3,
+          startupTimeout: 30,
+          shutdownTimeout: 10,
+        },
+        discoveredAt: new Date().toISOString(),
+        lastSeenAt: new Date().toISOString(),
+      }]);
+
       client.connect();
       await new Promise((resolve) => setTimeout(resolve, 20));
 
@@ -156,6 +180,12 @@ describe('SSE Client', () => {
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
+      // Check that server status was updated in store
+      const updatedServers = get(servers);
+      const updatedServer = updatedServers.find(s => s.id === 'server-1');
+      expect(updatedServer?.status.state).toBe('running');
+
+      // Check notification was added
       const notifs = get(notifications);
       expect(notifs.some((n) => n.message.includes('stopped → running'))).toBe(true);
     });

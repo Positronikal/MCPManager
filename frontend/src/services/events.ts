@@ -104,23 +104,30 @@ function handleServerDiscovered(data: any) {
  */
 async function handleServerStatusChanged(data: any) {
   // Backend sends: { serverID, oldState, newState }
+  console.log('[FRONTEND-EVENT] Received server:status:changed', data);
+
   if (data && data.serverID) {
     const serverId = data.serverID;
     const oldState = data.oldState;
     const newState = data.newState;
+
+    console.log('[FRONTEND-EVENT] Processing status change', { serverId, oldState, newState });
 
     if (oldState !== newState) {
       addNotification('info', `Server ${serverId}: ${oldState} → ${newState}`);
 
       // FR-005/FR-047: Fetch updated server and update store for real-time UI update
       try {
+        console.log('[FRONTEND-EVENT] Fetching updated server from backend...');
         const { GetServer } = await import('../../wailsjs/go/main/App');
         const updatedServer = await GetServer(serverId);
         if (updatedServer) {
+          console.log('[FRONTEND-EVENT] Updating server in store', updatedServer);
           updateServer(updatedServer);
+          console.log('[FRONTEND-EVENT] Store update complete');
         }
       } catch (error) {
-        console.error('Failed to fetch updated server:', error);
+        console.error('[FRONTEND-EVENT] Failed to fetch updated server:', error);
       }
     }
   }

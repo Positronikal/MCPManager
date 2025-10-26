@@ -155,6 +155,7 @@ func (a *App) subscribeToEvents() {
 	serverStatusCh := a.eventBus.Subscribe(events.EventServerStatusChanged)
 	go func() {
 		for event := range serverStatusCh {
+			slog.Info("[WAILS] Emitting server:status:changed event", "data", event.Data)
 			runtime.EventsEmit(a.ctx, "server:status:changed", event.Data)
 		}
 	}()

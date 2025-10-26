@@ -1,4 +1,6 @@
+import { get } from 'svelte/store';
 import {
+  servers,
   updateServer,
   updateServerStatus,
   addLog,
@@ -187,11 +189,34 @@ export class SSEClient {
       const oldState = event.data.oldState;
       const newState = event.data.newState;
 
-      // Update server status in store
-      // Note: We don't have full ServerStatus object, so we'll need to fetch it
-      // For now, just show notification
-      if (oldState !== newState) {
-        addNotification('info', `Server ${serverId}: ${oldState} → ${newState}`);
+      // Get current server from store
+      const currentServers = get(servers);
+      const server = currentServers.find(s => s.id === serverId);
+
+      if (server) {
+        // Update server status with new state
+        const updatedStatus: ServerStatus = {
+          ...server.status,
+          state: newState,
+          lastStateChange: event.timestamp || new Date().toISOString(),
+          lastChecked: event.timestamp || new Date().toISOString(),
+        };
+
+        // Clear error message if transitioning out of error state
+        if (newState !== 'error' && server.status.errorMessage) {
+          updatedStatus.errorMessage = undefined;
+        }
+
+        // Update the store - this will trigger UI reactivity
+        updateServerStatus(serverId, updatedStatus);
+
+        // Show notification for important state changes
+        if (oldState !== newState) {
+          const serverName = server.name || serverId;
+          addNotification('info', `${serverName}: ${oldState} → ${newState}`);
+        }
+      } else {
+        console.warn(`Server ${serverId} not found in store, cannot update status`);
       }
     }
   }

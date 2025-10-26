@@ -64,12 +64,19 @@ func (ls *LifecycleService) StartServer(server *models.MCPServer) error {
 
 	// Publish status changed event
 	if ls.eventBus != nil {
+		slog.Info("[EVENT] Publishing server.status.changed", "serverId", server.ID, "oldState", oldState, "newState", models.StatusStarting)
 		ls.eventBus.Publish(events.ServerStatusChangedEvent(server.ID, oldState, models.StatusStarting))
 	}
 
 	// Extract command and arguments
 	cmd := server.InstallationPath
 	args := server.Configuration.CommandLineArguments
+
+	// Log command and args for debugging
+	slog.Info("[PROCESS] Starting process", "serverId", server.ID, "command", cmd, "args", args, "argsCount", len(args))
+	for i, arg := range args {
+		slog.Info("[PROCESS] Argument", "index", i, "value", arg)
+	}
 
 	// Use environment variables from configuration
 	env := server.Configuration.EnvironmentVariables
@@ -269,6 +276,7 @@ func (ls *LifecycleService) monitorProcess(server *models.MCPServer, stopChan ch
 				if elapsed < 5*time.Second {
 					// Process exited too quickly - transition to error
 					oldState := server.Status.State
+					slog.Error("[MONITOR] Process crashed (exited too quickly)", "serverId", server.ID, "serverName", server.Name, "elapsed", elapsed, "pid", pid)
 					server.Status.TransitionTo(models.StatusError, "Process exited unexpectedly")
 					server.PID = nil
 
@@ -278,6 +286,7 @@ func (ls *LifecycleService) monitorProcess(server *models.MCPServer, stopChan ch
 					}
 
 					if ls.eventBus != nil {
+						slog.Info("[EVENT] Publishing server.status.changed (crashed)", "serverId", server.ID, "oldState", oldState, "newState", models.StatusError)
 						ls.eventBus.Publish(events.ServerStatusChangedEvent(server.ID, oldState, models.StatusError))
 					}
 				} else {
@@ -314,6 +323,7 @@ func (ls *LifecycleService) monitorProcess(server *models.MCPServer, stopChan ch
 					}
 
 					if ls.eventBus != nil {
+						slog.Info("[EVENT] Publishing server.status.changed (monitor)", "serverId", server.ID, "oldState", oldState, "newState", models.StatusRunning)
 						ls.eventBus.Publish(events.ServerStatusChangedEvent(server.ID, oldState, models.StatusRunning))
 					}
 
