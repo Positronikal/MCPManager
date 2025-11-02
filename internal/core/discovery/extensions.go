@@ -247,7 +247,41 @@ func (ced *ClaudeExtensionsDiscovery) createServerFromExtension(
 		server.Capabilities = append(server.Capabilities, tool.Name)
 	}
 
+	// Detect transport type
+	server.Transport = ced.detectTransport(manifest, command)
+
 	return server
+}
+
+// detectTransport determines the transport type for a server
+func (ced *ClaudeExtensionsDiscovery) detectTransport(manifest *ExtensionManifest, command string) models.TransportType {
+	// Check if transport is explicitly defined in manifest
+	// (Future: MCP spec may add transport field to manifest)
+
+	// For now, use heuristics based on command and server type
+	cmdLower := strings.ToLower(command)
+
+	// Node.js servers typically use stdio
+	if cmdLower == "node" || strings.Contains(cmdLower, "node") {
+		return models.TransportStdio
+	}
+
+	// Python/UV servers typically use stdio
+	if cmdLower == "python" || cmdLower == "python3" || cmdLower == "uv" {
+		return models.TransportStdio
+	}
+
+	// If server type hints at HTTP/SSE
+	serverType := strings.ToLower(manifest.Server.Type)
+	if strings.Contains(serverType, "http") {
+		return models.TransportHTTP
+	}
+	if strings.Contains(serverType, "sse") {
+		return models.TransportSSE
+	}
+
+	// Default to stdio for most MCP servers
+	return models.TransportStdio
 }
 
 // resolveArgs resolves template variables in args like ${__dirname} and ${user_config.*}

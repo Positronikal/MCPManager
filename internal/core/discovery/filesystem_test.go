@@ -108,17 +108,18 @@ func containsSubstring(s, substr string) bool {
 	return false
 }
 
-func toLower(s string) string {
-	result := make([]byte, len(s))
-	for i := 0; i < len(s); i++ {
-		if s[i] >= 'A' && s[i] <= 'Z' {
-			result[i] = s[i] + 32
-		} else {
-			result[i] = s[i]
-		}
-	}
-	return string(result)
-}
+// TODO: toLower is already defined in process_windows.go - removed duplicate
+// func toLower(s string) string {
+// 	result := make([]byte, len(s))
+// 	for i := 0; i < len(s); i++ {
+// 		if s[i] >= 'A' && s[i] <= 'Z' {
+// 			result[i] = s[i] + 32
+// 		} else {
+// 			result[i] = s[i]
+// 		}
+// 	}
+// 	return string(result)
+// }
 
 func TestFilesystemDiscovery_MockNPMDirectory(t *testing.T) {
 	tmpDir := t.TempDir()

@@ -24,14 +24,14 @@ func setupFullTestServices(t *testing.T) (*api.Services, func()) {
 	discoveryService := discovery.NewDiscoveryService(pathResolver, eventBus)
 	discoveryService.Discover()
 
-	lifecycleService := lifecycle.NewLifecycleService(processManager, discoveryService, eventBus)
+	monitoringService := monitoring.NewMonitoringService(eventBus)
+	lifecycleService := lifecycle.NewLifecycleService(processManager, discoveryService, monitoringService, eventBus)
 
 	configService, err := config.NewConfigService(eventBus)
 	if err != nil {
 		t.Fatalf("Failed to create config service: %v", err)
 	}
 
-	monitoringService := monitoring.NewMonitoringService(eventBus)
 	metricsCollector := monitoring.NewMetricsCollector(processInfo, eventBus)
 	dependencyService := dependencies.NewDependencyService()
 	updateChecker := dependencies.NewUpdateChecker()

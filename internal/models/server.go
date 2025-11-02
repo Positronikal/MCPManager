@@ -10,12 +10,23 @@ import (
 	"github.com/google/uuid"
 )
 
+// TransportType represents the communication transport used by an MCP server
+type TransportType string
+
+const (
+	TransportStdio   TransportType = "stdio"   // Standard input/output (requires client)
+	TransportHTTP    TransportType = "http"    // HTTP-based transport (standalone)
+	TransportSSE     TransportType = "sse"     // Server-Sent Events (standalone)
+	TransportUnknown TransportType = "unknown" // Transport not yet determined
+)
+
 // MCPServer represents an MCP server instance
 type MCPServer struct {
 	ID               string              `json:"id"`
 	Name             string              `json:"name"`
 	Version          string              `json:"version,omitempty"`
 	InstallationPath string              `json:"installationPath"`
+	Transport        TransportType       `json:"transport"`
 	Status           ServerStatus        `json:"status"`
 	PID              *int                `json:"pid,omitempty"`
 	Capabilities     []string            `json:"capabilities,omitempty"`
@@ -64,6 +75,7 @@ func NewMCPServer(name, installationPath string, source DiscoverySource) *MCPSer
 		ID:               GenerateDeterministicUUID(name, installationPath, source),
 		Name:             name,
 		InstallationPath: installationPath,
+		Transport:        TransportUnknown, // Will be detected later
 		Status:           *NewServerStatus(),
 		Configuration:    *NewServerConfiguration(),
 		Capabilities:     []string{},

@@ -416,6 +416,7 @@ export namespace models {
 	    name: string;
 	    version?: string;
 	    installationPath: string;
+	    transport: string;
 	    status: ServerStatus;
 	    pid?: number;
 	    capabilities?: string[];
@@ -438,6 +439,7 @@ export namespace models {
 	        this.name = source["name"];
 	        this.version = source["version"];
 	        this.installationPath = source["installationPath"];
+	        this.transport = source["transport"];
 	        this.status = this.convertValues(source["status"], ServerStatus);
 	        this.pid = source["pid"];
 	        this.capabilities = source["capabilities"];

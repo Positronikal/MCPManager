@@ -93,7 +93,7 @@ func TestLifecycleFlow_StartAndStop(t *testing.T) {
 
 	// Create lifecycle service (nil discoveryService for isolated tests)
 	processManager := platform.NewProcessManager()
-	lifecycleService := lifecycle.NewLifecycleService(processManager, nil, eventBus)
+	lifecycleService := lifecycle.NewLifecycleService(processManager, nil, nil, eventBus)
 
 	// Create test server configuration
 	port := "18765" // Use non-standard port to avoid conflicts
@@ -229,7 +229,7 @@ func TestLifecycleFlow_InvalidCommand(t *testing.T) {
 	defer eventBus.Close()
 
 	processManager := platform.NewProcessManager()
-	lifecycleService := lifecycle.NewLifecycleService(processManager, nil, eventBus)
+	lifecycleService := lifecycle.NewLifecycleService(processManager, nil, nil, eventBus)
 
 	// Create server with invalid command
 	server := models.NewMCPServer("invalid-server", "/nonexistent/command", models.DiscoveryClientConfig)
@@ -265,7 +265,7 @@ func TestLifecycleFlow_AlreadyRunning(t *testing.T) {
 	defer eventBus.Close()
 
 	processManager := platform.NewProcessManager()
-	lifecycleService := lifecycle.NewLifecycleService(processManager, nil, eventBus)
+	lifecycleService := lifecycle.NewLifecycleService(processManager, nil, nil, eventBus)
 
 	port := "18766"
 	server := models.NewMCPServer("test-server-2", testServerPath, models.DiscoveryClientConfig)
@@ -297,7 +297,7 @@ func TestLifecycleFlow_StopNotRunning(t *testing.T) {
 	defer eventBus.Close()
 
 	processManager := platform.NewProcessManager()
-	lifecycleService := lifecycle.NewLifecycleService(processManager, nil, eventBus)
+	lifecycleService := lifecycle.NewLifecycleService(processManager, nil, nil, eventBus)
 
 	server := models.NewMCPServer("stopped-server", "/some/path", models.DiscoveryClientConfig)
 
@@ -320,7 +320,7 @@ func TestLifecycleFlow_MultipleServers(t *testing.T) {
 	defer eventBus.Close()
 
 	processManager := platform.NewProcessManager()
-	lifecycleService := lifecycle.NewLifecycleService(processManager, nil, eventBus)
+	lifecycleService := lifecycle.NewLifecycleService(processManager, nil, nil, eventBus)
 
 	// Start multiple servers on different ports
 	servers := []*models.MCPServer{

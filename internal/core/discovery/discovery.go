@@ -299,54 +299,62 @@ func (ds *DiscoveryService) processMatchesServer(proc *ProcessInfo, server *mode
 
 		// Check if process name matches the server command
 		procName := strings.ToLower(proc.Name)
-		if !strings.Contains(procName, serverCmd) && !strings.HasPrefix(serverCmd, procName) {
+		commandMatch := strings.Contains(procName, serverCmd) || strings.HasPrefix(serverCmd, procName)
+
+		if !commandMatch {
 			fmt.Printf("        ✗ Process name doesn't match server command\n")
-			// Still continue - the command might be in the path
+			return false
 		}
 
-		// Check if command line contains key arguments from server config
-		for _, arg := range server.Configuration.CommandLineArguments {
-			argLower := strings.ToLower(arg)
-			// Skip common flags
-			if strings.HasPrefix(argLower, "-") || strings.HasPrefix(argLower, "--") {
-				continue
+		fmt.Printf("        ✓ Command name matches\n")
+
+		// For node servers, match the entry point script exactly
+		if serverCmd == "node" || strings.Contains(procName, "node") {
+			// Get the entry point (first argument should be the server's main script)
+			if len(server.Configuration.CommandLineArguments) == 0 {
+				fmt.Printf("        ✗ No arguments configured for node server\n")
+				return false
 			}
-			// Check if this argument appears in command line
-			if strings.Contains(cmdLine, argLower) {
-				fmt.Printf("        ✓ Argument match: %s\n", arg)
-				return true
+
+			entryPoint := server.Configuration.CommandLineArguments[0]
+			entryPointLower := strings.ToLower(strings.ReplaceAll(entryPoint, "\\", "/"))
+			cmdLinePath := strings.ReplaceAll(cmdLine, "\\", "/")
+
+			// The entry point script must appear in the command line
+			if !strings.Contains(cmdLinePath, entryPointLower) {
+				fmt.Printf("        ✗ Entry point script not found: %s\n", entryPoint)
+				return false
 			}
+
+			fmt.Printf("        ✓ Entry point script match: %s\n", entryPoint)
+			return true
 		}
 
-		// For node servers, check if the entry point script is in the command line
-		if serverCmd == "node" || strings.Contains(cmdLine, "node.exe") {
-			// Get extension path from environment variables
-			if extPath, ok := server.Configuration.EnvironmentVariables["__EXTENSION_PATH__"]; ok {
-				extPathLower := strings.ToLower(strings.ReplaceAll(extPath, "\\", "/"))
-				cmdLinePath := strings.ReplaceAll(cmdLine, "\\", "/")
-
-				// Check if command line contains the extension path
-				if strings.Contains(cmdLinePath, extPathLower) {
-					fmt.Printf("        ✓ Extension path match\n")
-					return true
-				}
-			}
-		}
-
-		// For uv/python servers, check for the directory path
+		// For uv/python servers, check for the extension directory path
 		if serverCmd == "uv" || serverCmd == "python" || serverCmd == "python3" {
 			// Get extension path from environment variables
-			if extPath, ok := server.Configuration.EnvironmentVariables["__EXTENSION_PATH__"]; ok {
-				extPathLower := strings.ToLower(strings.ReplaceAll(extPath, "\\", "/"))
-				cmdLinePath := strings.ReplaceAll(cmdLine, "\\", "/")
-
-				// Check if command line contains the extension path
-				if strings.Contains(cmdLinePath, extPathLower) {
-					fmt.Printf("        ✓ Extension path match\n")
-					return true
-				}
+			extPath, ok := server.Configuration.EnvironmentVariables["__EXTENSION_PATH__"]
+			if !ok {
+				fmt.Printf("        ✗ No extension path found in environment\n")
+				return false
 			}
+
+			extPathLower := strings.ToLower(strings.ReplaceAll(extPath, "\\", "/"))
+			cmdLinePath := strings.ReplaceAll(cmdLine, "\\", "/")
+
+			// Check if command line contains the extension path
+			if !strings.Contains(cmdLinePath, extPathLower) {
+				fmt.Printf("        ✗ Extension path not found: %s\n", extPath)
+				return false
+			}
+
+			fmt.Printf("        ✓ Extension path match: %s\n", extPath)
+			return true
 		}
+
+		// Unknown command type for extension
+		fmt.Printf("        ✗ Unknown extension command type: %s\n", serverCmd)
+		return false
 	}
 
 	// Method 2: Direct command path match

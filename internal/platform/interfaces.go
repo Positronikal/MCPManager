@@ -1,5 +1,7 @@
 package platform
 
+import "io"
+
 // PathResolver provides platform-specific path resolution
 type PathResolver interface {
 	// GetConfigDir returns the platform-specific configuration directory
@@ -19,6 +21,11 @@ type ProcessManager interface {
 	// Start launches a new process with the given command, arguments, and environment
 	// Returns the process ID on success
 	Start(cmd string, args []string, env map[string]string) (pid int, err error)
+
+	// StartWithOutput launches a new process and returns stdout/stderr readers
+	// Returns the process ID and readers for stdout and stderr
+	// The readers will be closed when the process exits
+	StartWithOutput(cmd string, args []string, env map[string]string) (pid int, stdout, stderr io.ReadCloser, err error)
 
 	// Stop terminates a process by its ID
 	// If graceful is true, attempts graceful shutdown before forcing termination

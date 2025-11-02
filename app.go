@@ -73,8 +73,12 @@ func (a *App) startup(ctx context.Context) {
 	a.discoveryService = discovery.NewDiscoveryService(pathResolver, a.eventBus)
 	slog.Info("Discovery service initialized")
 
-	// Initialize lifecycle service with discovery service dependency (BUG-001 fix)
-	a.lifecycleService = lifecycle.NewLifecycleService(processManager, a.discoveryService, a.eventBus)
+	// Initialize monitoring service (needed by lifecycle for log capture)
+	a.monitoringService = monitoring.NewMonitoringService(a.eventBus)
+	slog.Info("Monitoring service initialized")
+
+	// Initialize lifecycle service with discovery and monitoring dependencies
+	a.lifecycleService = lifecycle.NewLifecycleService(processManager, a.discoveryService, a.monitoringService, a.eventBus)
 	slog.Info("Lifecycle service initialized")
 
 	configService, err := config.NewConfigService(a.eventBus)
@@ -89,9 +93,6 @@ func (a *App) startup(ctx context.Context) {
 	}
 	a.configService = configService
 	slog.Info("Config service initialized")
-
-	a.monitoringService = monitoring.NewMonitoringService(a.eventBus)
-	slog.Info("Monitoring service initialized")
 
 	a.metricsCollector = monitoring.NewMetricsCollector(processInfo, a.eventBus)
 	slog.Info("Metrics collector initialized")

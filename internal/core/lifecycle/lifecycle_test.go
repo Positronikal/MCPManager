@@ -1,6 +1,9 @@
 package lifecycle
 
 import (
+	"context"
+	"io"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -11,9 +14,10 @@ import (
 
 // MockProcessManager is a mock implementation of ProcessManager for testing
 type MockProcessManager struct {
-	StartFunc     func(cmd string, args []string, env map[string]string) (int, error)
-	StopFunc      func(pid int, graceful bool, timeout int) error
-	IsRunningFunc func(pid int) bool
+	StartFunc           func(cmd string, args []string, env map[string]string) (int, error)
+	StartWithOutputFunc func(cmd string, args []string, env map[string]string) (int, io.ReadCloser, io.ReadCloser, error)
+	StopFunc            func(pid int, graceful bool, timeout int) error
+	IsRunningFunc       func(pid int) bool
 }
 
 func (m *MockProcessManager) Start(cmd string, args []string, env map[string]string) (int, error) {
@@ -21,6 +25,14 @@ func (m *MockProcessManager) Start(cmd string, args []string, env map[string]str
 		return m.StartFunc(cmd, args, env)
 	}
 	return 1234, nil
+}
+
+func (m *MockProcessManager) StartWithOutput(cmd string, args []string, env map[string]string) (int, io.ReadCloser, io.ReadCloser, error) {
+	if m.StartWithOutputFunc != nil {
+		return m.StartWithOutputFunc(cmd, args, env)
+	}
+	// Return mock readers (empty)
+	return 1234, io.NopCloser(strings.NewReader("")), io.NopCloser(strings.NewReader("")), nil
 }
 
 func (m *MockProcessManager) Stop(pid int, graceful bool, timeout int) error {
@@ -39,12 +51,31 @@ func (m *MockProcessManager) IsRunning(pid int) bool {
 
 // MockDiscoveryService is a mock implementation of DiscoveryService for testing (BUG-001 fix)
 type MockDiscoveryService struct {
-	UpdateServerFunc func(server *models.MCPServer)
+	UpdateServerFunc     func(server *models.MCPServer)
+	GetCachedServersFunc func() []models.MCPServer
 }
 
 func (m *MockDiscoveryService) UpdateServer(server *models.MCPServer) {
 	if m.UpdateServerFunc != nil {
 		m.UpdateServerFunc(server)
+	}
+}
+
+func (m *MockDiscoveryService) GetCachedServers() []models.MCPServer {
+	if m.GetCachedServersFunc != nil {
+		return m.GetCachedServersFunc()
+	}
+	return []models.MCPServer{}
+}
+
+// MockMonitoringService is a mock implementation of MonitoringService for testing
+type MockMonitoringService struct {
+	CaptureOutputFunc func(ctx context.Context, serverID string, reader io.Reader)
+}
+
+func (m *MockMonitoringService) CaptureOutput(ctx context.Context, serverID string, reader io.Reader) {
+	if m.CaptureOutputFunc != nil {
+		m.CaptureOutputFunc(ctx, serverID, reader)
 	}
 }
 
@@ -54,7 +85,7 @@ func TestNewLifecycleService(t *testing.T) {
 	eventBus := events.NewEventBus()
 	defer eventBus.Close()
 
-	service := NewLifecycleService(pm, ds, eventBus)
+	service := NewLifecycleService(pm, ds, &MockMonitoringService{}, eventBus)
 	if service == nil {
 		t.Fatal("Expected service to be created")
 	}
@@ -86,7 +117,7 @@ func TestLifecycleService_StartServer(t *testing.T) {
 	eventBus := events.NewEventBus()
 	defer eventBus.Close()
 
-	service := NewLifecycleService(pm, &MockDiscoveryService{}, eventBus)
+	service := NewLifecycleService(pm, &MockDiscoveryService{}, &MockMonitoringService{}, eventBus)
 
 	// Create a server
 	server := models.NewMCPServer("test-server", "test-cmd", models.DiscoveryClientConfig)
@@ -122,7 +153,7 @@ func TestLifecycleService_StartServer_InvalidState(t *testing.T) {
 	eventBus := events.NewEventBus()
 	defer eventBus.Close()
 
-	service := NewLifecycleService(pm, &MockDiscoveryService{}, eventBus)
+	service := NewLifecycleService(pm, &MockDiscoveryService{}, &MockMonitoringService{}, eventBus)
 
 	// Create a server already running
 	server := models.NewMCPServer("test-server", "test-cmd", models.DiscoveryClientConfig)
@@ -140,7 +171,7 @@ func TestLifecycleService_StartServer_MissingConfiguration(t *testing.T) {
 	eventBus := events.NewEventBus()
 	defer eventBus.Close()
 
-	service := NewLifecycleService(pm, &MockDiscoveryService{}, eventBus)
+	service := NewLifecycleService(pm, &MockDiscoveryService{}, &MockMonitoringService{}, eventBus)
 
 	// Create a server without installation path
 	server := models.NewMCPServer("test-server", "", models.DiscoveryClientConfig)
@@ -173,7 +204,7 @@ func TestLifecycleService_StopServer(t *testing.T) {
 	eventBus := events.NewEventBus()
 	defer eventBus.Close()
 
-	service := NewLifecycleService(pm, &MockDiscoveryService{}, eventBus)
+	service := NewLifecycleService(pm, &MockDiscoveryService{}, &MockMonitoringService{}, eventBus)
 
 	// Create a running server
 	server := models.NewMCPServer("test-server", "/path/to/server", models.DiscoveryClientConfig)
@@ -215,7 +246,7 @@ func TestLifecycleService_StopServer_Force(t *testing.T) {
 	eventBus := events.NewEventBus()
 	defer eventBus.Close()
 
-	service := NewLifecycleService(pm, &MockDiscoveryService{}, eventBus)
+	service := NewLifecycleService(pm, &MockDiscoveryService{}, &MockMonitoringService{}, eventBus)
 
 	// Create a running server
 	server := models.NewMCPServer("test-server", "/path/to/server", models.DiscoveryClientConfig)
@@ -240,7 +271,7 @@ func TestLifecycleService_StopServer_InvalidState(t *testing.T) {
 	eventBus := events.NewEventBus()
 	defer eventBus.Close()
 
-	service := NewLifecycleService(pm, &MockDiscoveryService{}, eventBus)
+	service := NewLifecycleService(pm, &MockDiscoveryService{}, &MockMonitoringService{}, eventBus)
 
 	// Create a stopped server
 	server := models.NewMCPServer("test-server", "/path/to/server", models.DiscoveryClientConfig)
@@ -266,7 +297,7 @@ func TestLifecycleService_RestartServer(t *testing.T) {
 	eventBus := events.NewEventBus()
 	defer eventBus.Close()
 
-	service := NewLifecycleService(pm, &MockDiscoveryService{}, eventBus)
+	service := NewLifecycleService(pm, &MockDiscoveryService{}, &MockMonitoringService{}, eventBus)
 
 	// Create a running server
 	server := models.NewMCPServer("test-server", "/path/to/server", models.DiscoveryClientConfig)
@@ -306,7 +337,7 @@ func TestLifecycleService_MonitorProcess_TransitionToRunning(t *testing.T) {
 	eventBus := events.NewEventBus()
 	defer eventBus.Close()
 
-	service := NewLifecycleService(pm, &MockDiscoveryService{}, eventBus)
+	service := NewLifecycleService(pm, &MockDiscoveryService{}, &MockMonitoringService{}, eventBus)
 
 	// Subscribe to status change events
 	eventChan := eventBus.Subscribe(events.EventServerStatusChanged)
@@ -366,7 +397,7 @@ func TestLifecycleService_MonitorProcess_EarlyExit(t *testing.T) {
 	eventBus := events.NewEventBus()
 	defer eventBus.Close()
 
-	service := NewLifecycleService(pm, &MockDiscoveryService{}, eventBus)
+	service := NewLifecycleService(pm, &MockDiscoveryService{}, &MockMonitoringService{}, eventBus)
 
 	// Subscribe to status change events
 	eventChan := eventBus.Subscribe(events.EventServerStatusChanged)
@@ -426,7 +457,7 @@ func TestLifecycleService_StopAll(t *testing.T) {
 	eventBus := events.NewEventBus()
 	defer eventBus.Close()
 
-	service := NewLifecycleService(pm, &MockDiscoveryService{}, eventBus)
+	service := NewLifecycleService(pm, &MockDiscoveryService{}, &MockMonitoringService{}, eventBus)
 
 	// Start multiple servers
 	server1 := models.NewMCPServer("server1", "/path1", models.DiscoveryClientConfig)
@@ -473,7 +504,7 @@ func TestLifecycleService_EventsPublished(t *testing.T) {
 	eventBus := events.NewEventBus()
 	defer eventBus.Close()
 
-	service := NewLifecycleService(pm, &MockDiscoveryService{}, eventBus)
+	service := NewLifecycleService(pm, &MockDiscoveryService{}, &MockMonitoringService{}, eventBus)
 
 	// Subscribe to status change events
 	eventChan := eventBus.Subscribe(events.EventServerStatusChanged)

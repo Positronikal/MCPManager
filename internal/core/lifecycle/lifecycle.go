@@ -1,7 +1,9 @@
 package lifecycle
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"sync"
 	"time"
@@ -14,29 +16,47 @@ import (
 // LifecycleService manages server lifecycle operations (start, stop, restart)
 type LifecycleService struct {
 	processManager   platform.ProcessManager
-	discoveryService DiscoveryService // Interface for cache synchronization
+	discoveryService DiscoveryService      // Interface for cache synchronization
+	monitoringService MonitoringService    // Interface for log capture
 	eventBus         *events.EventBus
 	mu               sync.RWMutex
 	monitors         map[string]chan struct{} // serverID -> stop channel for monitor
+	validatorStop    chan struct{}            // stop channel for PID validator
+	captureContexts  map[string]context.CancelFunc // serverID -> cancel function for output capture
 }
 
 // DiscoveryService interface for cache updates (avoid circular dependency)
 type DiscoveryService interface {
 	UpdateServer(server *models.MCPServer)
+	GetCachedServers() []models.MCPServer
+}
+
+// MonitoringService interface for log capture (avoid circular dependency)
+type MonitoringService interface {
+	CaptureOutput(ctx context.Context, serverID string, reader io.Reader)
 }
 
 // NewLifecycleService creates a new lifecycle service
 func NewLifecycleService(
 	processManager platform.ProcessManager,
 	discoveryService DiscoveryService,
+	monitoringService MonitoringService,
 	eventBus *events.EventBus,
 ) *LifecycleService {
-	return &LifecycleService{
-		processManager:   processManager,
-		discoveryService: discoveryService,
-		eventBus:         eventBus,
-		monitors:         make(map[string]chan struct{}),
+	ls := &LifecycleService{
+		processManager:    processManager,
+		discoveryService:  discoveryService,
+		monitoringService: monitoringService,
+		eventBus:          eventBus,
+		monitors:          make(map[string]chan struct{}),
+		validatorStop:     make(chan struct{}),
+		captureContexts:   make(map[string]context.CancelFunc),
 	}
+
+	// Start periodic PID validator for discovered processes
+	go ls.runPIDValidator()
+
+	return ls
 }
 
 // StartServer starts an MCP server
@@ -81,8 +101,8 @@ func (ls *LifecycleService) StartServer(server *models.MCPServer) error {
 	// Use environment variables from configuration
 	env := server.Configuration.EnvironmentVariables
 
-	// Start the process
-	pid, err := ls.processManager.Start(cmd, args, env)
+	// Start the process with output capture
+	pid, stdout, stderr, err := ls.processManager.StartWithOutput(cmd, args, env)
 	if err != nil {
 		// Transition to error state
 		server.Status.TransitionTo(models.StatusError, fmt.Sprintf("Failed to start: %v", err))
@@ -98,6 +118,27 @@ func (ls *LifecycleService) StartServer(server *models.MCPServer) error {
 	// Synchronously update discovery cache (BUG-001 fix)
 	if ls.discoveryService != nil {
 		ls.discoveryService.UpdateServer(server)
+	}
+
+	// Start capturing output if monitoring service is available
+	if ls.monitoringService != nil {
+		// Create context for output capture
+		ctx, cancel := context.WithCancel(context.Background())
+		ls.mu.Lock()
+		ls.captureContexts[server.ID] = cancel
+		ls.mu.Unlock()
+
+		// Start capturing stdout
+		go func() {
+			ls.monitoringService.CaptureOutput(ctx, server.ID, stdout)
+			stdout.Close()
+		}()
+
+		// Start capturing stderr
+		go func() {
+			ls.monitoringService.CaptureOutput(ctx, server.ID, stderr)
+			stderr.Close()
+		}()
 	}
 
 	// Start monitoring the process
@@ -131,7 +172,10 @@ func (ls *LifecycleService) StopServer(server *models.MCPServer, force bool, tim
 	pid := *server.PID
 	slog.Info("StopServer: Stopping process", "pid", pid, "force", force, "timeout", timeout)
 
-	// Stop monitoring first (prevents race conditions)
+	// Stop output capture first
+	ls.stopOutputCapture(server.ID)
+
+	// Stop monitoring (prevents race conditions)
 	ls.stopMonitoring(server.ID)
 
 	// Verify process is still running before attempting to stop
@@ -334,11 +378,91 @@ func (ls *LifecycleService) monitorProcess(server *models.MCPServer, stopChan ch
 	}
 }
 
-// StopAll stops all monitored servers
+// stopOutputCapture stops capturing output for a server
+func (ls *LifecycleService) stopOutputCapture(serverID string) {
+	ls.mu.Lock()
+	defer ls.mu.Unlock()
+
+	if cancel, exists := ls.captureContexts[serverID]; exists {
+		cancel()
+		delete(ls.captureContexts, serverID)
+	}
+}
+
+// runPIDValidator periodically validates all server PIDs to detect stale processes
+// This catches processes that were discovered (not started by us) and later died
+func (ls *LifecycleService) runPIDValidator() {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ls.validatorStop:
+			// Validator stopped
+			return
+
+		case <-ticker.C:
+			// Validate all server PIDs
+			ls.validateAllPIDs()
+		}
+	}
+}
+
+// validateAllPIDs checks all servers with PIDs and updates status if PID is stale
+func (ls *LifecycleService) validateAllPIDs() {
+	if ls.discoveryService == nil {
+		return
+	}
+
+	servers := ls.discoveryService.GetCachedServers()
+
+	for _, server := range servers {
+		// Skip servers without PIDs
+		if server.PID == nil {
+			continue
+		}
+
+		// Skip servers that are being monitored (they handle their own PID validation)
+		ls.mu.RLock()
+		_, isMonitored := ls.monitors[server.ID]
+		ls.mu.RUnlock()
+
+		if isMonitored {
+			continue
+		}
+
+		// Validate PID still exists
+		pid := *server.PID
+		if !ls.processManager.IsRunning(pid) {
+			// PID is stale - process died
+			slog.Info("[VALIDATOR] Detected stale PID", "serverId", server.ID, "serverName", server.Name, "pid", pid, "previousState", server.Status.State)
+
+			oldState := server.Status.State
+			server.Status.TransitionTo(models.StatusStopped, "Process no longer running")
+			server.PID = nil
+
+			// Update discovery cache
+			ls.discoveryService.UpdateServer(&server)
+
+			// Publish status changed event
+			if ls.eventBus != nil {
+				ls.eventBus.Publish(events.ServerStatusChangedEvent(server.ID, oldState, models.StatusStopped))
+			}
+		}
+	}
+}
+
+// StopAll stops all monitored servers and the PID validator
 func (ls *LifecycleService) StopAll() {
 	ls.mu.Lock()
 	defer ls.mu.Unlock()
 
+	// Stop PID validator
+	if ls.validatorStop != nil {
+		close(ls.validatorStop)
+	}
+
+	// Stop all monitors
 	for _, stopChan := range ls.monitors {
 		close(stopChan)
 	}

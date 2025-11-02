@@ -2,6 +2,7 @@ package platform
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"runtime"
@@ -43,6 +44,45 @@ func (pm *DefaultProcessManager) Start(cmd string, args []string, env map[string
 
 	// Return the PID
 	return command.Process.Pid, nil
+}
+
+// StartWithOutput launches a new process and returns stdout/stderr readers
+func (pm *DefaultProcessManager) StartWithOutput(cmd string, args []string, env map[string]string) (int, io.ReadCloser, io.ReadCloser, error) {
+	// Create the command
+	command := exec.Command(cmd, args...)
+
+	// Set environment variables
+	if env != nil {
+		// Start with current environment
+		command.Env = os.Environ()
+
+		// Add/override with provided env vars
+		for key, value := range env {
+			command.Env = append(command.Env, fmt.Sprintf("%s=%s", key, value))
+		}
+	}
+
+	// Create pipes for stdout and stderr
+	stdoutPipe, err := command.StdoutPipe()
+	if err != nil {
+		return 0, nil, nil, fmt.Errorf("failed to create stdout pipe: %w", err)
+	}
+
+	stderrPipe, err := command.StderrPipe()
+	if err != nil {
+		return 0, nil, nil, fmt.Errorf("failed to create stderr pipe: %w", err)
+	}
+
+	// Platform-specific process group settings
+	setProcAttributes(command)
+
+	// Start the process
+	if err := command.Start(); err != nil {
+		return 0, nil, nil, fmt.Errorf("failed to start process: %w", err)
+	}
+
+	// Return PID and pipes (StdoutPipe and StderrPipe already return io.ReadCloser)
+	return command.Process.Pid, stdoutPipe, stderrPipe, nil
 }
 
 // Stop terminates a process by its ID

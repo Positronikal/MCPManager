@@ -48,6 +48,9 @@
 - Q: When a server crashes unexpectedly during operation (not during startup), what log retention policy should apply? → A: Keep last 1000 log entries per server
 - Q: What is the maximum number of MCP servers the system should be designed to handle efficiently? → A: Up to 50 servers (power user / team environment)
 
+### Session 2025-10-27
+- Q: FR-007 states users can start servers via button, but testing revealed that most MCP servers are stdio-based and require a client connection to function. How should "start" be implemented given this architectural reality? → A: The Start button behavior depends on server transport type: (1) For stdio-based servers (majority case), clicking Start opens a configuration helper that updates the appropriate client config file (e.g., claude_desktop_config.json) and guides the user to restart their MCP client, which will then launch the server with proper stdio connection. (2) For HTTP/SSE servers or other standalone-capable servers, Start launches them directly as processes. (3) The UI clearly indicates the server's transport type and the expected Start behavior. This approach respects the MCP protocol architecture while providing maximum user convenience.
+
 ---
 
 ## User Scenarios & Testing *(mandatory)*
@@ -122,7 +125,7 @@ As a developer or system administrator working with multiple MCP servers, I need
 - **FR-016**: System MUST allow configuration of environment variables for each server.
 - **FR-017**: System MUST allow configuration of command-line arguments for each server.
 - **FR-018**: System MUST validate configuration syntax before applying changes.
-- **FR-019**: System MUST NEVER modify MCP client configuration files (e.g., Claude Desktop, Cursor configs).
+- **FR-019**: System MAY modify MCP client configuration files (e.g., claude_desktop_config.json) when explicitly requested by the user through the configuration interface, but MUST NOT attempt to manage, replace, or interfere with MCP client functionality beyond configuration assistance.
 
 #### Monitoring & Logging
 - **FR-020**: System MUST display a real-time log viewer at the bottom of the main window.
@@ -172,7 +175,7 @@ As a developer or system administrator working with multiple MCP servers, I need
 ### Explicit Out of Scope
 The following capabilities are explicitly excluded from this feature:
 
-- **Client Configuration Management**: The system will NOT modify or manage MCP client configuration files (Claude Desktop, Cursor, etc.). This is excluded to avoid tight coupling with external implementations that may change.
+- **MCP Client Replacement**: The system will NOT attempt to replace or replicate MCP client functionality. It may assist with client configuration but defers actual server launching and protocol communication to proper MCP clients (Claude Desktop, Cursor, etc.). This maintains proper separation of concerns and respects the stdio-based architecture of the MCP protocol.
 
 - **MCP Protocol Implementation**: The system will NOT implement the MCP protocol itself, relying instead on existing MCP libraries.
 
@@ -219,7 +222,7 @@ The following capabilities are explicitly excluded from this feature:
 
 - [x] User description parsed
 - [x] Key concepts extracted
-- [x] Ambiguities marked (5 clarifications identified)
+- [x] Ambiguities marked (6 clarifications identified)
 - [x] User scenarios defined
 - [x] Requirements generated (54 functional requirements)
 - [x] Entities identified (6 key entities)
