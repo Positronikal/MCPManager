@@ -54,18 +54,12 @@
     error = '';
 
     try {
-      // TODO: Replace with actual API call when backend endpoint is ready
-      // const response = await fetch('/api/v1/services');
-      // if (!response.ok) throw new Error('Failed to fetch services');
-      // const data = await response.json();
-      // services = data.services;
-
-      // For now, use mock data
-      await new Promise(resolve => setTimeout(resolve, 500));
-      services = mockServices;
+      // Fetch services from backend API
+      const response = await fetch('/api/v1/services');
+      if (!response.ok) throw new Error('Failed to fetch services');
+      const data = await response.json();
+      services = data.services;
       applyFilters();
-
-      addNotification('warning', 'Backend API /api/v1/services not implemented yet - showing mock data');
     } catch (err: any) {
       error = err.message || 'Failed to load system services';
       services = [];

@@ -61,17 +61,11 @@
         return;
       }
 
-      // TODO: Replace with actual API call when backend endpoint is ready
-      // const response = await fetch(`/api/v1/netstat?pids=${pids}`);
-      // if (!response.ok) throw new Error('Failed to fetch network connections');
-      // const data = await response.json();
-      // connections = data.connections;
-
-      // For now, use mock data filtered by running server PIDs
-      const pidSet = new Set($runningServers.map(s => s.pid).filter(Boolean));
-      connections = mockConnections.filter(c => pidSet.has(c.pid));
-
-      addNotification('info', 'Backend API /api/v1/netstat not implemented yet - showing mock data');
+      // Fetch network connections from backend API
+      const response = await fetch(`/api/v1/netstat?pids=${pids}`);
+      if (!response.ok) throw new Error('Failed to fetch network connections');
+      const data = await response.json();
+      connections = data.connections;
     } catch (err: any) {
       error = err.message || 'Failed to load network connections';
       connections = [];

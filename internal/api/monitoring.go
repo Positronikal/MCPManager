@@ -3,12 +3,14 @@ package api
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/Positronikal/MCPManager/internal/core/discovery"
 	"github.com/Positronikal/MCPManager/internal/core/monitoring"
 	"github.com/Positronikal/MCPManager/internal/models"
+	"github.com/Positronikal/MCPManager/internal/platform"
 )
 
 // MonitoringHandlers contains HTTP handlers for monitoring endpoints
@@ -275,4 +277,76 @@ func strContains(s, substr string) bool {
 		}
 	}
 	return false
+}
+
+// NetstatResponse is the response structure for GET /api/v1/netstat
+type NetstatResponse struct {
+	Connections []platform.NetstatEntry `json:"connections"`
+}
+
+// GetNetstat handles GET /api/v1/netstat?pids=1234,5678
+func (h *MonitoringHandlers) GetNetstat(w http.ResponseWriter, r *http.Request) {
+	// Parse PIDs from query parameter
+	pidsParam := r.URL.Query().Get("pids")
+	var pids []int
+
+	if pidsParam != "" {
+		pidStrs := strings.Split(pidsParam, ",")
+		for _, pidStr := range pidStrs {
+			pidStr = strings.TrimSpace(pidStr)
+			if pidStr == "" {
+				continue
+			}
+			pid, err := strconv.Atoi(pidStr)
+			if err != nil {
+				respondError(w, http.StatusBadRequest, "Invalid PID format: "+pidStr)
+				return
+			}
+			pids = append(pids, pid)
+		}
+	}
+
+	// Get netstat entries from platform utilities
+	entries, err := platform.GetNetstat(pids)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve network connections: "+err.Error())
+		return
+	}
+
+	// Handle nil slice
+	if entries == nil {
+		entries = []platform.NetstatEntry{}
+	}
+
+	response := NetstatResponse{
+		Connections: entries,
+	}
+
+	respondJSON(w, http.StatusOK, response)
+}
+
+// ServicesResponse is the response structure for GET /api/v1/services
+type ServicesResponse struct {
+	Services []platform.Service `json:"services"`
+}
+
+// GetServices handles GET /api/v1/services
+func (h *MonitoringHandlers) GetServices(w http.ResponseWriter, r *http.Request) {
+	// Get services from platform utilities
+	services, err := platform.GetServices()
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve services: "+err.Error())
+		return
+	}
+
+	// Handle nil slice
+	if services == nil {
+		services = []platform.Service{}
+	}
+
+	response := ServicesResponse{
+		Services: services,
+	}
+
+	respondJSON(w, http.StatusOK, response)
 }

@@ -12,12 +12,10 @@ MCPManager is a desktop application for managing Model Context Protocol (MCP) se
 
 ### Implementation Progress
 - **Phase A-D**: Complete (68/68 tasks) ✅
-- **Phase E**: 28/30 tasks 🔄
-  - ❌ T-E013: Netstat backend API (frontend complete, showing mock data)
-  - ❌ T-E016: Services backend API (frontend complete, showing mock data)
+- **Phase E**: Complete (30/30 tasks) ✅
 - **Phase F**: Complete (10/10 tasks) ✅
 
-**Specification tasks: 96/98 complete (98%)**
+**Specification tasks: 98/98 complete (100%)** 🎉
 
 **All tests passing**: ✅ 100% pass rate
 - Discovery tests: Fixed (nil slice issue)
@@ -28,18 +26,21 @@ MCPManager is a desktop application for managing Model Context Protocol (MCP) se
 
 **Tasks**: See [tasks/](specs/001-mcp-manager-specification/tasks/) for modular phase files (90KB → 6 files)
 
-### Known Incomplete Features (2 remaining)
-- **Netstat** (`NetstatView.svelte`): Frontend complete, backend API pending (T-E013)
-  - Shows mock data with user notification
-  - Needs: `GET /api/v1/netstat?pids=<pids>` endpoint
-- **Services** (`ServicesView.svelte`): Frontend complete, backend API pending (T-E016)
-  - Shows mock data with user notification
-  - Needs: `GET /api/v1/services` endpoint
+### Recently Completed Features
+- **Netstat API** (T-E013): ✅ Complete
+  - Platform-specific utilities for Windows/macOS/Linux
+  - Backend endpoint: `GET /api/v1/netstat?pids=<pids>`
+  - Frontend integrated and working
+- **Services API** (T-E016): ✅ Complete
+  - Platform-specific utilities for Windows/macOS/Linux
+  - Backend endpoint: `GET /api/v1/services`
+  - Frontend integrated and working
 
-**Next Steps**: See `NEXT_SESSION.md` for detailed implementation guide
+**Next Steps**: Ready for merge to main and versioning
 
 ### Recent Commits
-- `[pending]`: Fixed 5 test failures (discovery, lifecycle, contract) - 100% pass rate achieved
+- `[pending]`: Implement Netstat and Services APIs (T-E013, T-E016) - **98/98 tasks complete!**
+- `6c9d6b3` (2025-11-12): Fixed 5 test failures (discovery, lifecycle, contract) - 100% pass rate achieved
 - `f9433e4` (2025-11-12): Phase F complete, module path updated to github.com/Positronikal/MCPManager
 - `ffc14e0` (2025-11-12): Fixed 7 manual test failures - stdio detection, Explorer/Shell APIs, UI fixes
 

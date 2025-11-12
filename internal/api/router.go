@@ -63,6 +63,8 @@ func NewRouter(services *Services) *chi.Mux {
 		r.Get("/servers/{serverId}/logs", monitoringHandlers.GetServerLogs)
 		r.Get("/logs", monitoringHandlers.GetAllLogs)
 		r.Get("/servers/{serverId}/metrics", monitoringHandlers.GetServerMetrics)
+		r.Get("/netstat", monitoringHandlers.GetNetstat)
+		r.Get("/services", monitoringHandlers.GetServices)
 
 		// Dependency endpoints
 		r.Get("/servers/{serverId}/dependencies", dependencyHandlers.GetServerDependencies)
