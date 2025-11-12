@@ -220,16 +220,6 @@
       </div>
     {/if}
   </div>
-
-  <!-- Backend API notice -->
-  <div class="api-notice">
-    <strong>⚠️ Backend API Required:</strong>
-    <code>GET /api/v1/services</code>
-    <br />
-    Response: <code>{'{ services: [{ name, status, description, pid? }] }'}</code>
-    <br />
-    <small>Should run: sc query (Windows), launchctl list (macOS), systemctl list-units (Linux)</small>
-  </div>
 </div>
 
 <style>

@@ -186,14 +186,6 @@
       </div>
     {/if}
   </div>
-
-  <!-- Backend API notice -->
-  <div class="api-notice">
-    <strong>⚠️ Backend API Required:</strong>
-    <code>GET /api/v1/netstat?pids=&lt;comma-separated&gt;</code>
-    <br />
-    Response: <code>{'{ connections: [{ protocol, localAddress, remoteAddress, state, pid }] }'}</code>
-  </div>
 </div>
 
 <style>
