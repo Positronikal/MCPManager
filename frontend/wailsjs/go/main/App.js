@@ -93,3 +93,11 @@ export function UpdateConfiguration(arg1, arg2) {
 export function WriteClientConfig(arg1, arg2) {
   return window['go']['main']['App']['WriteClientConfig'](arg1, arg2);
 }
+
+export function GetNetstat(arg1) {
+  return window['go']['main']['App']['GetNetstat'](arg1);
+}
+
+export function GetServices() {
+  return window['go']['main']['App']['GetServices']();
+}

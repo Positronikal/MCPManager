@@ -50,3 +50,7 @@ export function UpdateApplicationState(arg1:models.ApplicationState):Promise<mai
 export function UpdateConfiguration(arg1:string,arg2:models.ServerConfiguration):Promise<models.ServerConfiguration>;
 
 export function WriteClientConfig(arg1:string,arg2:config.ClientConfig):Promise<void>;
+
+export function GetNetstat(arg1:number[]):Promise<main.NetstatResponse>;
+
+export function GetServices():Promise<main.ServicesResponse>;

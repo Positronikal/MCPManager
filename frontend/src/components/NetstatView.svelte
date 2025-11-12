@@ -1,11 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { servers, runningServers, addNotification } from '../stores/stores';
-
-  // NOTE: This component requires backend API endpoint:
-  // GET /api/v1/netstat?pids=<comma-separated-pids>
-  // Response: { connections: NetstatEntry[] }
-  // NetstatEntry: { protocol: string, localAddress: string, remoteAddress: string, state: string, pid: number }
+  import { GetNetstat } from '../../wailsjs/go/main/App';
 
   interface NetstatEntry {
     protocol: string;
@@ -21,24 +17,6 @@
   let autoRefresh = false;
   let refreshInterval: number | null = null;
 
-  // Mock data for demonstration (backend API not implemented yet)
-  const mockConnections: NetstatEntry[] = [
-    {
-      protocol: 'TCP',
-      localAddress: '127.0.0.1:8080',
-      remoteAddress: '127.0.0.1:54321',
-      state: 'ESTABLISHED',
-      pid: 12345
-    },
-    {
-      protocol: 'TCP',
-      localAddress: '127.0.0.1:3000',
-      remoteAddress: '0.0.0.0:0',
-      state: 'LISTENING',
-      pid: 12346
-    }
-  ];
-
   onMount(() => {
     loadConnections();
   });
@@ -49,23 +27,20 @@
 
     try {
       // Get PIDs of running servers
-      const pids = $runningServers
+      const pidsList = $runningServers
         .filter(s => s.pid)
-        .map(s => s.pid)
-        .join(',');
+        .map(s => s.pid as number);
 
-      if (!pids) {
+      if (pidsList.length === 0) {
         connections = [];
         error = 'No running servers to monitor';
         loading = false;
         return;
       }
 
-      // Fetch network connections from backend API
-      const response = await fetch(`/api/v1/netstat?pids=${pids}`);
-      if (!response.ok) throw new Error('Failed to fetch network connections');
-      const data = await response.json();
-      connections = data.connections;
+      // Call Wails backend method
+      const response = await GetNetstat(pidsList);
+      connections = response.connections || [];
     } catch (err: any) {
       error = err.message || 'Failed to load network connections';
       connections = [];

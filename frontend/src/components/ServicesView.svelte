@@ -1,12 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { addNotification } from '../stores/stores';
-
-  // NOTE: This component requires backend API endpoint:
-  // GET /api/v1/services
-  // Response: { services: Service[] }
-  // Service: { name: string, status: string, description: string, pid?: number }
-  // Backend should run: sc query (Windows), launchctl list (macOS), systemctl list-units (Linux)
+  import { GetServices } from '../../wailsjs/go/main/App';
 
   interface Service {
     name: string;
@@ -24,27 +19,6 @@
   let searchTimeout: number | null = null;
   let statusFilter: string | null = null;
 
-  // Mock data for demonstration
-  const mockServices: Service[] = [
-    {
-      name: 'mcp-server-example',
-      status: 'running',
-      description: 'Example MCP Server Service',
-      pid: 12345
-    },
-    {
-      name: 'docker',
-      status: 'running',
-      description: 'Docker Desktop Service',
-      pid: 4567
-    },
-    {
-      name: 'ssh-agent',
-      status: 'stopped',
-      description: 'OpenSSH Authentication Agent'
-    }
-  ];
-
   onMount(() => {
     loadServices();
   });
@@ -54,11 +28,9 @@
     error = '';
 
     try {
-      // Fetch services from backend API
-      const response = await fetch('/api/v1/services');
-      if (!response.ok) throw new Error('Failed to fetch services');
-      const data = await response.json();
-      services = data.services;
+      // Call Wails backend method
+      const response = await GetServices();
+      services = response.services || [];
       applyFilters();
     } catch (err: any) {
       error = err.message || 'Failed to load system services';
