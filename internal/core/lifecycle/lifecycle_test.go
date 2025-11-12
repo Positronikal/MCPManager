@@ -286,11 +286,15 @@ func TestLifecycleService_StopServer_InvalidState(t *testing.T) {
 
 func TestLifecycleService_RestartServer(t *testing.T) {
 	pm := &MockProcessManager{
-		StartFunc: func(cmd string, args []string, env map[string]string) (int, error) {
-			return 5678, nil
+		StartWithOutputFunc: func(cmd string, args []string, env map[string]string) (int, io.ReadCloser, io.ReadCloser, error) {
+			return 5678, io.NopCloser(strings.NewReader("")), io.NopCloser(strings.NewReader("")), nil
 		},
 		StopFunc: func(pid int, graceful bool, timeout int) error {
 			return nil
+		},
+		IsRunningFunc: func(pid int) bool {
+			// Both old and new PIDs return true for smooth transition
+			return pid == 1234 || pid == 5678
 		},
 	}
 
@@ -310,6 +314,9 @@ func TestLifecycleService_RestartServer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RestartServer should not error: %v", err)
 	}
+
+	// Wait for async start operation to complete
+	time.Sleep(500 * time.Millisecond)
 
 	// Verify new PID was set
 	if server.PID == nil {

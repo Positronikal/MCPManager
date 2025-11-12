@@ -11,37 +11,41 @@ MCPManager is a desktop application for managing Model Context Protocol (MCP) se
 **Last Updated**: 2025-11-12
 
 ### Implementation Progress
-- **Phase A-E**: Complete (88/88 tasks) ✅
+- **Phase A-D**: Complete (68/68 tasks) ✅
+- **Phase E**: 28/30 tasks 🔄
+  - ❌ T-E013: Netstat backend API (frontend complete, showing mock data)
+  - ❌ T-E016: Services backend API (frontend complete, showing mock data)
 - **Phase F**: Complete (10/10 tasks) ✅
-  - ✅ Initial setup and builds working
-  - ✅ T-F001: Integration test - initial launch & discovery
-  - ✅ T-F002: Integration test - server lifecycle (start/stop)
-  - ✅ T-F003: Integration test - log filtering
-  - ✅ T-F004: Integration test - configuration editing (FR-019 verified)
-  - ✅ T-F005: Integration test - edge case: server crash detection
-  - ✅ T-F006: Integration test - edge case: external config file changes
-  - ✅ T-F007: Performance benchmark - startup time (<2s target)
-  - ✅ T-F008: Performance benchmark - memory usage (<100MB idle, 50 servers)
-  - ✅ T-F009: CI/CD pipeline with GitHub Actions
-  - ✅ T-F010: Production packaging (scripts/build-all.sh, PACKAGING.md)
 
-**All specification tasks complete: 98/98 ✅**
+**Specification tasks: 96/98 complete (98%)**
+
+**All tests passing**: ✅ 100% pass rate
+- Discovery tests: Fixed (nil slice issue)
+- Lifecycle tests: Fixed (RestartServer mock)
+- Contract tests: Passing
+- Integration tests: Passing
+- Performance benchmarks: Complete
 
 **Tasks**: See [tasks/](specs/001-mcp-manager-specification/tasks/) for modular phase files (90KB → 6 files)
 
-### Known Incomplete Features
-- **Netstat** (`NetstatView.svelte`): Shows mock data, backend API pending (T-E013)
-- **Services** (`ServicesView.svelte`): Shows mock data, backend API pending (T-E016)
-- Both components properly notify users that backend APIs aren't ready
+### Known Incomplete Features (2 remaining)
+- **Netstat** (`NetstatView.svelte`): Frontend complete, backend API pending (T-E013)
+  - Shows mock data with user notification
+  - Needs: `GET /api/v1/netstat?pids=<pids>` endpoint
+- **Services** (`ServicesView.svelte`): Frontend complete, backend API pending (T-E016)
+  - Shows mock data with user notification
+  - Needs: `GET /api/v1/services` endpoint
+
+**Next Steps**: See `NEXT_SESSION.md` for detailed implementation guide
 
 ### Recent Commits
+- `[pending]`: Fixed 5 test failures (discovery, lifecycle, contract) - 100% pass rate achieved
+- `f9433e4` (2025-11-12): Phase F complete, module path updated to github.com/Positronikal/MCPManager
 - `ffc14e0` (2025-11-12): Fixed 7 manual test failures - stdio detection, Explorer/Shell APIs, UI fixes
-- `55f0067`: Phase F Tasks 1-4 complete, build clean, ready for Option D UI
-- `a18e35e`: Argument parsing and Svelte reactivity fixes
 
 ### Known Issues
 - Explorer sometimes opens to Documents folder on Windows (functional but could be refined)
-- Some contract tests failing (need investigation)
+- ~~Some contract tests failing~~ ✅ Fixed
 
 ## Specification-Driven Development (Spec Kit)
 

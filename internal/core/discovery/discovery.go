@@ -396,7 +396,7 @@ func (ds *DiscoveryService) GetCachedServers() []models.MCPServer {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
 
-	var servers []models.MCPServer
+	servers := []models.MCPServer{}
 	for _, server := range ds.cachedServers {
 		servers = append(servers, *server)
 	}

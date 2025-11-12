@@ -28,7 +28,7 @@ func NewFilesystemDiscovery(pathResolver platform.PathResolver, eventBus *events
 
 // DiscoverFromFilesystem discovers servers from NPM, Python, and Go installations
 func (fd *FilesystemDiscovery) DiscoverFromFilesystem() ([]models.MCPServer, error) {
-	var allServers []models.MCPServer
+	allServers := []models.MCPServer{}
 
 	// Discover from NPM global packages
 	fmt.Println("  Scanning NPM global packages...")
