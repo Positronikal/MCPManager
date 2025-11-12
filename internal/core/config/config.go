@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/hoytech/mcpmanager/internal/core/events"
-	"github.com/hoytech/mcpmanager/internal/models"
-	"github.com/hoytech/mcpmanager/internal/platform"
+	"github.com/Positronikal/MCPManager/internal/core/events"
+	"github.com/Positronikal/MCPManager/internal/models"
+	"github.com/Positronikal/MCPManager/internal/platform"
 )
 
 // ConfigService manages server configurations

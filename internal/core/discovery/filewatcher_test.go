@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hoytech/mcpmanager/internal/core/events"
+	"github.com/Positronikal/MCPManager/internal/core/events"
 )
 
 func TestNewConfigFileWatcher(t *testing.T) {

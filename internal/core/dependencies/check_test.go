@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hoytech/mcpmanager/internal/models"
+	"github.com/Positronikal/MCPManager/internal/models"
 )
 
 // MockCommandExecutor implements CommandExecutor for testing

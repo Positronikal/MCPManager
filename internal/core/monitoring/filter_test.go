@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hoytech/mcpmanager/internal/models"
+	"github.com/Positronikal/MCPManager/internal/models"
 )
 
 // setupTestMonitoringService creates a monitoring service with test data

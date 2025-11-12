@@ -3,15 +3,15 @@ package contract
 import (
 	"testing"
 
-	"github.com/hoytech/mcpmanager/internal/api"
-	"github.com/hoytech/mcpmanager/internal/core/config"
-	"github.com/hoytech/mcpmanager/internal/core/dependencies"
-	"github.com/hoytech/mcpmanager/internal/core/discovery"
-	"github.com/hoytech/mcpmanager/internal/core/events"
-	"github.com/hoytech/mcpmanager/internal/core/lifecycle"
-	"github.com/hoytech/mcpmanager/internal/core/monitoring"
-	"github.com/hoytech/mcpmanager/internal/platform"
-	"github.com/hoytech/mcpmanager/internal/storage"
+	"github.com/Positronikal/MCPManager/internal/api"
+	"github.com/Positronikal/MCPManager/internal/core/config"
+	"github.com/Positronikal/MCPManager/internal/core/dependencies"
+	"github.com/Positronikal/MCPManager/internal/core/discovery"
+	"github.com/Positronikal/MCPManager/internal/core/events"
+	"github.com/Positronikal/MCPManager/internal/core/lifecycle"
+	"github.com/Positronikal/MCPManager/internal/core/monitoring"
+	"github.com/Positronikal/MCPManager/internal/platform"
+	"github.com/Positronikal/MCPManager/internal/storage"
 )
 
 // setupFullTestServices creates a complete services setup for integration-style contract tests

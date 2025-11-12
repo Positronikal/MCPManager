@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/hoytech/mcpmanager/internal/core/events"
+	"github.com/Positronikal/MCPManager/internal/core/events"
 )
 
 // ConfigFileWatcher monitors client config files for changes

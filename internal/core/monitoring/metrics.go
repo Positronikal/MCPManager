@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hoytech/mcpmanager/internal/core/events"
-	"github.com/hoytech/mcpmanager/internal/models"
-	"github.com/hoytech/mcpmanager/internal/platform"
+	"github.com/Positronikal/MCPManager/internal/core/events"
+	"github.com/Positronikal/MCPManager/internal/models"
+	"github.com/Positronikal/MCPManager/internal/platform"
 )
 
 // MetricsCollector manages metrics collection for MCP servers

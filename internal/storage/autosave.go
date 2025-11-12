@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hoytech/mcpmanager/internal/models"
+	"github.com/Positronikal/MCPManager/internal/models"
 )
 
 // AutoSaver provides automatic state saving with debouncing

@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hoytech/mcpmanager/internal/core/events"
-	"github.com/hoytech/mcpmanager/internal/core/lifecycle"
-	"github.com/hoytech/mcpmanager/internal/models"
-	"github.com/hoytech/mcpmanager/internal/platform"
+	"github.com/Positronikal/MCPManager/internal/core/events"
+	"github.com/Positronikal/MCPManager/internal/core/lifecycle"
+	"github.com/Positronikal/MCPManager/internal/models"
+	"github.com/Positronikal/MCPManager/internal/platform"
 )
 
 // buildTestServer compiles the test server if needed

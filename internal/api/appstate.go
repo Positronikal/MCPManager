@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/hoytech/mcpmanager/internal/models"
-	"github.com/hoytech/mcpmanager/internal/storage"
+	"github.com/Positronikal/MCPManager/internal/models"
+	"github.com/Positronikal/MCPManager/internal/storage"
 )
 
 // AppStateHandlers contains HTTP handlers for application state endpoints

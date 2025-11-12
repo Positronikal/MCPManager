@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hoytech/mcpmanager/internal/models"
-	"github.com/hoytech/mcpmanager/internal/platform"
+	"github.com/Positronikal/MCPManager/internal/models"
+	"github.com/Positronikal/MCPManager/internal/platform"
 )
 
 // StorageService defines the interface for persisting application state

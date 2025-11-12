@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/hoytech/mcpmanager/internal/models"
+	"github.com/Positronikal/MCPManager/internal/models"
 )
 
 // CommandExecutor allows for mocking command execution in tests

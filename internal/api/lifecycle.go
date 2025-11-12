@@ -6,9 +6,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/hoytech/mcpmanager/internal/core/discovery"
-	"github.com/hoytech/mcpmanager/internal/core/lifecycle"
-	"github.com/hoytech/mcpmanager/internal/models"
+	"github.com/Positronikal/MCPManager/internal/core/discovery"
+	"github.com/Positronikal/MCPManager/internal/core/lifecycle"
+	"github.com/Positronikal/MCPManager/internal/models"
 )
 
 // LifecycleHandlers contains HTTP handlers for lifecycle endpoints

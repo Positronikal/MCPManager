@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/hoytech/mcpmanager/internal/core/events"
-	"github.com/hoytech/mcpmanager/internal/models"
+	"github.com/Positronikal/MCPManager/internal/core/events"
+	"github.com/Positronikal/MCPManager/internal/models"
 )
 
 // MonitoringService manages log capture and monitoring for MCP servers

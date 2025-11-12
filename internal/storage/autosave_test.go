@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hoytech/mcpmanager/internal/models"
+	"github.com/Positronikal/MCPManager/internal/models"
 )
 
 // MockStorage is a mock storage service for testing

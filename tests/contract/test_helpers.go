@@ -1,10 +1,10 @@
 package contract
 
 import (
-	"github.com/hoytech/mcpmanager/internal/api"
-	"github.com/hoytech/mcpmanager/internal/core/discovery"
-	"github.com/hoytech/mcpmanager/internal/core/events"
-	"github.com/hoytech/mcpmanager/internal/platform"
+	"github.com/Positronikal/MCPManager/internal/api"
+	"github.com/Positronikal/MCPManager/internal/core/discovery"
+	"github.com/Positronikal/MCPManager/internal/core/events"
+	"github.com/Positronikal/MCPManager/internal/platform"
 )
 
 // createTestRouter creates a router with test services for contract testing

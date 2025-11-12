@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hoytech/mcpmanager/internal/models"
+	"github.com/Positronikal/MCPManager/internal/models"
 )
 
 // MockHTTPClient implements HTTPClient for testing

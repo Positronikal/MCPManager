@@ -2,13 +2,13 @@ package api
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/hoytech/mcpmanager/internal/core/config"
-	"github.com/hoytech/mcpmanager/internal/core/dependencies"
-	"github.com/hoytech/mcpmanager/internal/core/discovery"
-	"github.com/hoytech/mcpmanager/internal/core/events"
-	"github.com/hoytech/mcpmanager/internal/core/lifecycle"
-	"github.com/hoytech/mcpmanager/internal/core/monitoring"
-	"github.com/hoytech/mcpmanager/internal/storage"
+	"github.com/Positronikal/MCPManager/internal/core/config"
+	"github.com/Positronikal/MCPManager/internal/core/dependencies"
+	"github.com/Positronikal/MCPManager/internal/core/discovery"
+	"github.com/Positronikal/MCPManager/internal/core/events"
+	"github.com/Positronikal/MCPManager/internal/core/lifecycle"
+	"github.com/Positronikal/MCPManager/internal/core/monitoring"
+	"github.com/Positronikal/MCPManager/internal/storage"
 )
 
 // Services contains all application services
