@@ -58,17 +58,13 @@ export function setupWailsEvents() {
   // Initial servers event (sent on startup)
   EventsOn('servers:initial', (servers: MCPServer[]) => {
     console.log('Initial servers received:', servers);
-    if (servers && servers.length > 0) {
-      addNotification('success', `Loaded ${servers.length} servers`);
-    }
+    handleServersUpdate(servers, 'Loaded');
   });
 
   // Servers discovered event (sent after manual discovery)
   EventsOn('servers:discovered', (servers: MCPServer[]) => {
     console.log('Servers discovered:', servers);
-    if (servers && servers.length > 0) {
-      addNotification('info', `Discovered ${servers.length} servers`);
-    }
+    handleServersUpdate(servers, 'Discovered');
   });
 
   console.log('Wails event listeners initialized');
@@ -179,5 +175,30 @@ function handleServerConfigUpdated(data: any) {
     const fileName = data.filePath.split(/[/\\]/).pop() || data.filePath;
     // FR-050: Provide option to refresh discovery results
     addNotification('warning', `Configuration file changed (${fileName}). Click Refresh to update server list.`, 10000);
+  }
+}
+
+/**
+ * Handle servers update (initial load or discovery)
+ * Issue 2 fix: Update servers store when discovery completes
+ */
+function handleServersUpdate(servers: MCPServer[], actionType: string) {
+  console.log(`[FRONTEND-EVENT] ${actionType} servers:`, servers);
+
+  if (servers && Array.isArray(servers)) {
+    // Update the servers store with the complete server list
+    import('../stores/stores').then(({ servers: serversStore }) => {
+      serversStore.set(servers);
+      console.log(`[FRONTEND-EVENT] Store updated with ${servers.length} servers`);
+    });
+
+    // Show notification
+    if (servers.length > 0) {
+      addNotification('success', `${actionType} ${servers.length} server${servers.length !== 1 ? 's' : ''}`);
+    } else {
+      addNotification('info', `${actionType} 0 servers`);
+    }
+  } else {
+    console.warn(`[FRONTEND-EVENT] Invalid servers data received:`, servers);
   }
 }

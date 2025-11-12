@@ -197,7 +197,7 @@
 
         <h4>Project Links</h4>
         <div class="links-grid">
-          <a href="https://github.com/anthropics/mcp" target="_blank" rel="noopener" class="link-button">
+          <a href="https://modelcontextprotocol.io/introduction" target="_blank" rel="noopener" class="link-button">
             📚 MCP Documentation
           </a>
           <a href="https://wails.io" target="_blank" rel="noopener" class="link-button">
@@ -293,6 +293,7 @@
   .content-section {
     max-width: 800px;
     margin: 0 auto;
+    text-align: left;
   }
 
   .content-section h3 {
@@ -333,19 +334,22 @@
 
   .content-section dl {
     display: grid;
-    grid-template-columns: 150px 1fr;
+    grid-template-columns: minmax(120px, 150px) 1fr;
     gap: var(--spacing-sm) var(--spacing-md);
     margin: 0 0 var(--spacing-md) 0;
+    align-items: start;
   }
 
   .content-section dt {
     font-weight: 600;
     color: var(--text-primary);
+    text-align: left;
   }
 
   .content-section dd {
     margin: 0;
     color: var(--text-secondary);
+    text-align: left;
   }
 
   /* Status indicators */

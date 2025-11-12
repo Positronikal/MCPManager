@@ -24,6 +24,7 @@ type App struct {
 	discoveryService  *discovery.DiscoveryService
 	lifecycleService  *lifecycle.LifecycleService
 	configService     *config.ConfigService
+	clientEditor      *config.ClientEditor
 	monitoringService *monitoring.MonitoringService
 	metricsCollector  *monitoring.MetricsCollector
 	dependencyService *dependencies.DependencyService
@@ -93,6 +94,9 @@ func (a *App) startup(ctx context.Context) {
 	}
 	a.configService = configService
 	slog.Info("Config service initialized")
+
+	a.clientEditor = config.NewClientEditor()
+	slog.Info("Client editor initialized")
 
 	a.metricsCollector = monitoring.NewMetricsCollector(processInfo, a.eventBus)
 	slog.Info("Metrics collector initialized")
@@ -268,7 +272,12 @@ func (a *App) StartServer(serverID string) (*ServerOperationResponse, error) {
 		return nil, fmt.Errorf("server not found: %s", serverID)
 	}
 
-	// Start the server
+	// Check transport type (Option D: stdio servers require client configuration)
+	if server.Transport == models.TransportStdio {
+		return nil, fmt.Errorf("stdio_requires_client: This server uses stdio transport and must be started through an MCP client (e.g., Claude Desktop). Use the configuration editor to add it to your client's config.")
+	}
+
+	// Start standalone servers directly (http/sse/unknown transports)
 	if err := a.lifecycleService.StartServer(server); err != nil {
 		return nil, fmt.Errorf("failed to start server: %w", err)
 	}
@@ -563,5 +572,134 @@ func (a *App) UpdateApplicationState(state *models.ApplicationState) (*UpdateApp
 
 	return &UpdateApplicationStateResponse{
 		Message: "Application state updated successfully",
+	}, nil
+}
+
+// ========================================
+// Client Config Editor Methods (Task 6)
+// ========================================
+
+// DetectClients detects which MCP clients are installed on the system
+func (a *App) DetectClients() ([]config.ClientInfo, error) {
+	slog.Info("DetectClients called")
+	return a.clientEditor.DetectClients()
+}
+
+// ReadClientConfig reads and parses an MCP client configuration file
+func (a *App) ReadClientConfig(configPath string) (*config.ClientConfig, error) {
+	slog.Info("ReadClientConfig called", "configPath", configPath)
+	return a.clientEditor.ReadConfig(configPath)
+}
+
+// WriteClientConfig writes an updated configuration to the client config file
+func (a *App) WriteClientConfig(configPath string, config *config.ClientConfig) error {
+	slog.Info("WriteClientConfig called", "configPath", configPath)
+	return a.clientEditor.WriteConfig(configPath, config)
+}
+
+// AddServerToClientConfig adds a new server entry to the client configuration
+func (a *App) AddServerToClientConfig(configPath string, serverName string, command string, args []string, env map[string]string) error {
+	slog.Info("AddServerToClientConfig called", "configPath", configPath, "serverName", serverName)
+
+	// Read existing config
+	config, err := a.clientEditor.ReadConfig(configPath)
+	if err != nil {
+		return fmt.Errorf("failed to read config: %w", err)
+	}
+
+	// Add server
+	if err := a.clientEditor.AddServer(config, serverName, command, args, env); err != nil {
+		return fmt.Errorf("failed to add server: %w", err)
+	}
+
+	// Write updated config
+	if err := a.clientEditor.WriteConfig(configPath, config); err != nil {
+		return fmt.Errorf("failed to write config: %w", err)
+	}
+
+	return nil
+}
+
+// RemoveServerFromClientConfig removes a server entry from the client configuration
+func (a *App) RemoveServerFromClientConfig(configPath string, serverName string) error {
+	slog.Info("RemoveServerFromClientConfig called", "configPath", configPath, "serverName", serverName)
+
+	// Read existing config
+	config, err := a.clientEditor.ReadConfig(configPath)
+	if err != nil {
+		return fmt.Errorf("failed to read config: %w", err)
+	}
+
+	// Remove server
+	if err := a.clientEditor.RemoveServer(config, serverName); err != nil {
+		return fmt.Errorf("failed to remove server: %w", err)
+	}
+
+	// Write updated config
+	if err := a.clientEditor.WriteConfig(configPath, config); err != nil {
+		return fmt.Errorf("failed to write config: %w", err)
+	}
+
+	return nil
+}
+
+// ========================================
+// Utility Methods (T-E013 through T-E017)
+// ========================================
+
+// OpenExplorerResponse represents the response from OpenExplorer
+type OpenExplorerResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
+// OpenExplorer opens the file explorer at the specified path
+func (a *App) OpenExplorer(path string) (*OpenExplorerResponse, error) {
+	slog.Info("OpenExplorer called", "path", path)
+
+	if path == "" {
+		return &OpenExplorerResponse{
+			Success: false,
+			Message: "Path cannot be empty",
+		}, fmt.Errorf("path cannot be empty")
+	}
+
+	// Use platform-specific command to open file explorer
+	err := platform.OpenFileExplorer(path)
+	if err != nil {
+		return &OpenExplorerResponse{
+			Success: false,
+			Message: fmt.Sprintf("Failed to open explorer: %v", err),
+		}, err
+	}
+
+	return &OpenExplorerResponse{
+		Success: true,
+		Message: "File explorer opened successfully",
+	}, nil
+}
+
+// LaunchShellResponse represents the response from LaunchShell
+type LaunchShellResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
+// LaunchShell opens a system shell/terminal
+func (a *App) LaunchShell() (*LaunchShellResponse, error) {
+	slog.Info("LaunchShell called")
+
+	// Use platform-specific command to launch shell
+	err := platform.LaunchShell()
+	if err != nil {
+		return &LaunchShellResponse{
+			Success: false,
+			Message: fmt.Sprintf("Failed to launch shell: %v", err),
+		}, err
+	}
+
+	return &LaunchShellResponse{
+		Success: true,
+		Message: "Shell launched successfully",
 	}, nil
 }

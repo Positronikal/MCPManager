@@ -192,7 +192,14 @@ func (ls *LifecycleService) StopServer(server *models.MCPServer, force bool, tim
 			slog.Info("StopServer: Cache synchronized (process was not running)")
 		}
 
+		// Publish log entry (Issue 1 fix)
 		if ls.eventBus != nil {
+			logEntry := models.NewLogEntry(
+				models.LogWarning,
+				server.ID,
+				fmt.Sprintf("Server %s was already stopped (PID %d not found)", server.Name, pid),
+			)
+			ls.eventBus.Publish(events.ServerLogEntryEvent(server.ID, logEntry))
 			ls.eventBus.Publish(events.ServerStatusChangedEvent(server.ID, oldState, models.StatusStopped))
 		}
 		return nil
@@ -207,6 +214,16 @@ func (ls *LifecycleService) StopServer(server *models.MCPServer, force bool, tim
 	}
 
 	slog.Info("StopServer: Process stopped successfully", "pid", pid)
+
+	// Publish log entry for stop operation (Issue 1 fix)
+	if ls.eventBus != nil {
+		logEntry := models.NewLogEntry(
+			models.LogInfo,
+			server.ID,
+			fmt.Sprintf("Server %s stopped successfully (PID: %d)", server.Name, pid),
+		)
+		ls.eventBus.Publish(events.ServerLogEntryEvent(server.ID, logEntry))
+	}
 
 	// Transition to stopped state
 	oldState := server.Status.State

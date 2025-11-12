@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/hoytech/mcpmanager/internal/core/events"
 	"github.com/hoytech/mcpmanager/internal/models"
@@ -148,7 +149,10 @@ func (ccd *ClientConfigDiscovery) discoverFromFile(configPath, clientName string
 			server.Configuration.EnvironmentVariables = make(map[string]string)
 		}
 
-		fmt.Printf("        Added to server list\n")
+		// Detect transport type based on command
+		server.Transport = ccd.detectTransport(serverCfg.Command)
+
+		fmt.Printf("        Added to server list (transport: %s)\n", server.Transport)
 		servers = append(servers, *server)
 	}
 
@@ -171,4 +175,29 @@ func (ccd *ClientConfigDiscovery) GetConfigPaths() []string {
 // DiscoverFromPath discovers servers from a specific config file path
 func (ccd *ClientConfigDiscovery) DiscoverFromPath(configPath string) ([]models.MCPServer, error) {
 	return ccd.discoverFromFile(configPath, "custom")
+}
+
+// detectTransport determines the transport type for a server based on command
+func (ccd *ClientConfigDiscovery) detectTransport(command string) models.TransportType {
+	// Use heuristics based on command
+	cmdLower := strings.ToLower(command)
+
+	// Node.js servers typically use stdio
+	if cmdLower == "node" || strings.Contains(cmdLower, "node") {
+		return models.TransportStdio
+	}
+
+	// Python/UV servers typically use stdio
+	if cmdLower == "python" || cmdLower == "python3" || cmdLower == "uv" {
+		return models.TransportStdio
+	}
+
+	// npx, uvx also use stdio
+	if cmdLower == "npx" || cmdLower == "uvx" {
+		return models.TransportStdio
+	}
+
+	// Default to stdio for most MCP servers from client configs
+	// (client configs almost always define stdio-based servers)
+	return models.TransportStdio
 }

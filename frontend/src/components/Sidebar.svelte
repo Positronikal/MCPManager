@@ -120,6 +120,7 @@
     height: 100%;
     background-color: var(--bg-secondary);
     border-right: 1px solid var(--border-color);
+    overflow-y: auto;
   }
 
   .sidebar-header {
@@ -134,7 +135,7 @@
   }
 
   .nav-menu {
-    flex: 1;
+    flex: 0 0 auto;
     list-style: none;
     padding: var(--spacing-md) 0;
     margin: 0;
@@ -180,6 +181,7 @@
   }
 
   .utilities-section {
+    flex: 0 0 auto;
     margin-top: auto;
     padding-top: var(--spacing-md);
     border-top: 1px solid var(--border-color);
@@ -195,6 +197,7 @@
   }
 
   .sidebar-footer {
+    flex: 0 0 auto;
     padding: var(--spacing-md);
     border-top: 1px solid var(--border-color);
     text-align: center;

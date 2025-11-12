@@ -4,6 +4,8 @@
   import type { MCPServer } from '../stores/stores';
   import ConfigurationEditor from './ConfigurationEditor.svelte';
   import DetailedLogsView from './DetailedLogsView.svelte';
+  import StdioInfoModal from './StdioInfoModal.svelte';
+  import ClientConfigEditorModal from './ClientConfigEditorModal.svelte';
   import { onMount } from 'svelte';
 
   // Loading states for individual servers
@@ -17,6 +19,14 @@
   // Detailed logs view state
   let showDetailedLogs = false;
   let detailedLogsServerId: string | null = null;
+
+  // Stdio info modal state
+  let showStdioInfoModal = false;
+  let stdioInfoServer: MCPServer | null = null;
+
+  // Client config editor state
+  let showClientConfigEditor = false;
+  let clientConfigEditorServer: MCPServer | null = null;
   
   // Fetch servers on component mount
   onMount(async () => {
@@ -32,6 +42,14 @@
 
   // Handle Start server action
   async function handleStart(server: MCPServer) {
+    // Check transport type (Option D: stdio servers need client configuration)
+    if (server.transport === 'stdio') {
+      stdioInfoServer = server;
+      showStdioInfoModal = true;
+      return;
+    }
+
+    // Standalone servers (http/sse/unknown) can be started directly
     try {
       loadingServers.set(server.id, 'starting');
       loadingServers = loadingServers; // Trigger reactivity
@@ -116,13 +134,49 @@
     detailedLogsServerId = null;
   }
 
-  // Get button text based on loading state
+  // Handle closing stdio info modal
+  function closeStdioInfoModal() {
+    showStdioInfoModal = false;
+    stdioInfoServer = null;
+  }
+
+  // Handle opening client config editor from stdio modal
+  function openClientConfigEditor() {
+    if (stdioInfoServer) {
+      clientConfigEditorServer = stdioInfoServer;
+      showClientConfigEditor = true;
+    }
+  }
+
+  // Handle closing client config editor
+  function closeClientConfigEditor() {
+    showClientConfigEditor = false;
+    clientConfigEditorServer = null;
+  }
+
+  // Get button text based on loading state and transport type
   function getButtonText(serverId: string, action: string, defaultText: string): string {
     const loadingAction = loadingServers.get(serverId);
     if (loadingAction === action) {
       return '...';
     }
     return defaultText;
+  }
+
+  // Get start button label based on transport type
+  function getStartButtonLabel(server: MCPServer): string {
+    if (server.transport === 'stdio') {
+      return 'ℹ️ Info';
+    }
+    return '▶️ Start';
+  }
+
+  // Get start button tooltip based on transport type
+  function getStartButtonTooltip(server: MCPServer): string {
+    if (server.transport === 'stdio') {
+      return 'Stdio server - requires MCP client';
+    }
+    return 'Start server';
   }
 
   // Check if server is currently loading
@@ -243,12 +297,12 @@
                   <!-- Start button (only when stopped or error) -->
                   {#if server.status.state === 'stopped' || server.status.state === 'error'}
                     <button
-                      class="btn-action btn-start"
+                      class="btn-action {server.transport === 'stdio' ? 'btn-info' : 'btn-start'}"
                       on:click={() => handleStart(server)}
                       disabled={isServerLoading(server.id)}
-                      title="Start server"
+                      title={getStartButtonTooltip(server)}
                     >
-                      {getButtonText(server.id, 'starting', '▶️ Start')}
+                      {getButtonText(server.id, 'starting', getStartButtonLabel(server))}
                     </button>
                   {/if}
 
@@ -319,6 +373,23 @@
   <DetailedLogsView
     serverId={detailedLogsServerId}
     onClose={closeDetailedLogs}
+  />
+{/if}
+
+<!-- Stdio Info Modal -->
+{#if showStdioInfoModal && stdioInfoServer}
+  <StdioInfoModal
+    server={stdioInfoServer}
+    onClose={closeStdioInfoModal}
+    onOpenConfigEditor={openClientConfigEditor}
+  />
+{/if}
+
+<!-- Client Config Editor Modal -->
+{#if showClientConfigEditor && clientConfigEditorServer}
+  <ClientConfigEditorModal
+    server={clientConfigEditorServer}
+    onClose={closeClientConfigEditor}
   />
 {/if}
 
@@ -543,6 +614,16 @@
 
   .btn-start:hover:not(:disabled) {
     background-color: rgba(76, 175, 80, 0.3);
+  }
+
+  .btn-info {
+    background-color: rgba(33, 150, 243, 0.2);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+  }
+
+  .btn-info:hover:not(:disabled) {
+    background-color: rgba(33, 150, 243, 0.3);
   }
 
   .btn-stop {

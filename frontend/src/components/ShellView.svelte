@@ -1,10 +1,6 @@
 <script lang="ts">
   import { addNotification } from '../stores/stores';
-
-  // NOTE: This component requires backend API endpoint:
-  // POST /api/v1/shell
-  // Response: { success: boolean, message: string }
-  // Backend should launch platform shell: cmd.exe (Windows), Terminal.app (macOS), xterm (Linux)
+  import { LaunchShell } from '../../wailsjs/go/main/App';
 
   let launching = false;
 
@@ -12,16 +8,12 @@
     launching = true;
 
     try {
-      // TODO: Replace with actual API call when backend endpoint is ready
-      // const response = await fetch('/api/v1/shell', { method: 'POST' });
-      // if (!response.ok) throw new Error('Failed to launch shell');
-      // const data = await response.json();
-      // addNotification('success', data.message || 'Shell launched successfully');
-
-      // Mock implementation for now
-      await new Promise(resolve => setTimeout(resolve, 500));
-      addNotification('warning', 'Backend API /api/v1/shell not implemented yet');
-      addNotification('info', 'Would launch: cmd.exe (Windows), Terminal.app (macOS), or xterm (Linux)');
+      const response = await LaunchShell();
+      if (response.Success) {
+        addNotification('success', response.Message || 'Shell launched successfully');
+      } else {
+        addNotification('error', response.Message || 'Failed to launch shell');
+      }
     } catch (err: any) {
       addNotification('error', err.message || 'Failed to launch shell');
     } finally {
@@ -91,15 +83,6 @@
     </div>
   </div>
 
-  <!-- Backend API notice -->
-  <div class="api-notice">
-    <strong>⚠️ Backend API Required:</strong>
-    <code>POST /api/v1/shell</code>
-    <br />
-    Response: <code>{'{ success: boolean, message: string }'}</code>
-    <br />
-    <small>Should launch platform shell using os/exec: cmd.exe, Terminal.app, or xterm</small>
-  </div>
 </div>
 
 <style>
@@ -131,11 +114,13 @@
 
   .view-content {
     flex: 1;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: var(--spacing-xl);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    min-height: 0;
   }
 
   .shell-card {
@@ -242,30 +227,6 @@
   .shell-tips li {
     font-size: var(--font-size-sm);
     color: var(--text-secondary);
-  }
-
-  /* API notice */
-  .api-notice {
-    padding: var(--spacing-md);
-    background-color: rgba(255, 152, 0, 0.1);
-    border-top: 2px solid var(--status-error);
-    font-size: var(--font-size-xs);
-    color: var(--text-secondary);
-    line-height: 1.5;
-  }
-
-  .api-notice code {
-    background-color: var(--bg-primary);
-    padding: 2px 4px;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-mono);
-    color: var(--text-primary);
-  }
-
-  .api-notice small {
-    display: block;
-    margin-top: var(--spacing-xs);
-    color: var(--text-muted);
   }
 
   /* Responsive */

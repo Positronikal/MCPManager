@@ -1,3 +1,72 @@
+export namespace config {
+	
+	export class ServerEntry {
+	    command: string;
+	    args: string[];
+	    env?: Record<string, string>;
+	
+	    static createFrom(source: any = {}) {
+	        return new ServerEntry(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.command = source["command"];
+	        this.args = source["args"];
+	        this.env = source["env"];
+	    }
+	}
+	export class ClientConfig {
+	    mcpServers: Record<string, ServerEntry>;
+	
+	    static createFrom(source: any = {}) {
+	        return new ClientConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.mcpServers = this.convertValues(source["mcpServers"], ServerEntry, true);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class ClientInfo {
+	    type: string;
+	    name: string;
+	    configPath: string;
+	    installed: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new ClientInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.type = source["type"];
+	        this.name = source["name"];
+	        this.configPath = source["configPath"];
+	        this.installed = source["installed"];
+	    }
+	}
+
+}
+
 export namespace dependencies {
 	
 	export class UpdateInfo {
@@ -109,6 +178,20 @@ export namespace main {
 		    return a;
 		}
 	}
+	export class LaunchShellResponse {
+	    success: boolean;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new LaunchShellResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.message = source["message"];
+	    }
+	}
 	export class ListServersResponse {
 	    servers: models.MCPServer[];
 	    count: number;
@@ -142,6 +225,20 @@ export namespace main {
 		    }
 		    return a;
 		}
+	}
+	export class OpenExplorerResponse {
+	    success: boolean;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new OpenExplorerResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.message = source["message"];
+	    }
 	}
 	export class ServerOperationResponse {
 	    message: string;

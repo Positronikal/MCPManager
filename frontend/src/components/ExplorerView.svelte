@@ -1,11 +1,6 @@
 <script lang="ts">
   import { servers, filteredServers, serverFilters, addNotification } from '../stores/stores';
-  import { BrowserOpenURL } from '../../wailsjs/runtime/runtime';
-
-  // NOTE: This component uses Wails BrowserOpenURL which works for opening directories
-  // Alternative: Backend API endpoint POST /api/v1/explorer?path=<path>
-  // Response: { success: boolean, message: string }
-  // Backend would launch: explorer (Windows), open (macOS), xdg-open (Linux)
+  import { OpenExplorer } from '../../wailsjs/go/main/App';
 
   let searchQuery = '';
   let searchInput = ''; // Temporary input value for debouncing
@@ -37,8 +32,13 @@
         }
       }
 
-      await BrowserOpenURL(directory);
-      addNotification('success', `Opened ${serverName} directory`);
+      // Use backend API to open file explorer
+      const response = await OpenExplorer(directory);
+      if (response.Success) {
+        addNotification('success', `Opened ${serverName} directory`);
+      } else {
+        addNotification('error', response.Message || 'Failed to open directory');
+      }
     } catch (error: any) {
       addNotification('error', `Failed to open directory: ${error.message || error}`);
     }

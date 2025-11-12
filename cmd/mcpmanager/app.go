@@ -267,7 +267,12 @@ func (a *App) StartServer(serverID string) (*ServerOperationResponse, error) {
 		return nil, fmt.Errorf("server not found: %s", serverID)
 	}
 
-	// Start the server
+	// Check transport type (Option D: stdio servers require client configuration)
+	if server.Transport == models.TransportStdio {
+		return nil, fmt.Errorf("stdio_requires_client: This server uses stdio transport and must be started through an MCP client (e.g., Claude Desktop). Use the configuration editor to add it to your client's config.")
+	}
+
+	// Start standalone servers directly (http/sse/unknown transports)
 	if err := a.lifecycleService.StartServer(server); err != nil {
 		return nil, fmt.Errorf("failed to start server: %w", err)
 	}
