@@ -542,6 +542,58 @@ func (a *App) GetUpdates(serverID string) (*dependencies.UpdateInfo, error) {
 }
 
 // ========================================
+// Utilities Methods
+// ========================================
+
+// NetstatResponse represents the response from GetNetstat
+type NetstatResponse struct {
+	Connections []platform.NetstatEntry `json:"connections"`
+}
+
+// GetNetstat retrieves network connections for the specified PIDs
+func (a *App) GetNetstat(pids []int) (*NetstatResponse, error) {
+	slog.Info("GetNetstat called", "pids", pids)
+
+	entries, err := platform.GetNetstat(pids)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve network connections: %w", err)
+	}
+
+	// Handle nil slice
+	if entries == nil {
+		entries = []platform.NetstatEntry{}
+	}
+
+	return &NetstatResponse{
+		Connections: entries,
+	}, nil
+}
+
+// ServicesResponse represents the response from GetServices
+type ServicesResponse struct {
+	Services []platform.Service `json:"services"`
+}
+
+// GetServices retrieves all system services
+func (a *App) GetServices() (*ServicesResponse, error) {
+	slog.Info("GetServices called")
+
+	services, err := platform.GetServices()
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve services: %w", err)
+	}
+
+	// Handle nil slice
+	if services == nil {
+		services = []platform.Service{}
+	}
+
+	return &ServicesResponse{
+		Services: services,
+	}, nil
+}
+
+// ========================================
 // Application State Methods
 // ========================================
 

@@ -38,12 +38,20 @@ export function GetMetrics(arg1) {
   return window['go']['main']['App']['GetMetrics'](arg1);
 }
 
+export function GetNetstat(arg1) {
+  return window['go']['main']['App']['GetNetstat'](arg1);
+}
+
 export function GetServer(arg1) {
   return window['go']['main']['App']['GetServer'](arg1);
 }
 
 export function GetServerStatus(arg1) {
   return window['go']['main']['App']['GetServerStatus'](arg1);
+}
+
+export function GetServices() {
+  return window['go']['main']['App']['GetServices']();
 }
 
 export function GetUpdates(arg1) {
