@@ -44,7 +44,7 @@ $IMPL_PLAN     = $envData.IMPL_PLAN
 $NEW_PLAN = $IMPL_PLAN
 
 # Agent file paths
-$CLAUDE_FILE   = Join-Path $REPO_ROOT 'CLAUDE.md'
+$CLAUDE_FILE   = Join-Path $REPO_ROOT 'docs/CLAUDE.md'
 $GEMINI_FILE   = Join-Path $REPO_ROOT 'GEMINI.md'
 $COPILOT_FILE  = Join-Path $REPO_ROOT '.github/copilot-instructions.md'
 $CURSOR_FILE   = Join-Path $REPO_ROOT '.cursor/rules/specify-rules.mdc'

@@ -1,64 +1,8 @@
-# Bug Tracking
+# Bug Reporting
 
-## Active Bugs
+This document explains how to report bugs for MCP Manager. Please use GitHub Issues for bug reports, following the guidelines below.
 
-*No active bugs*
-
----
-
-## Fixed Bugs
-
-### BUG-001: Server State Desynchronization After Stop Operation ✅ FIXED
-**Date Reported:** 2025-10-23  
-**Date Fixed:** 2025-10-23  
-**Fixed In:** Phase 1 implementation by Claude Code  
-**Severity:** High  
-**Components:** Discovery Service, Lifecycle Service
-
-#### Problem Description
-When a server was stopped via MCP Manager's Stop button, the cache retained stale "Running" state instead of updating to "Stopped". This caused Refresh to not update state correctly and Restart operations to fail.
-
-#### Root Cause
-Lifecycle service modified server state in memory but never synchronized changes to the discovery service cache. The cache remained out of sync until next discovery scan.
-
-#### Solution Implemented
-Added synchronous cache updates in `internal/core/lifecycle/lifecycle.go`:
-1. Added `DiscoveryService` interface to avoid circular dependency
-2. Modified `LifecycleService` to accept `discoveryService` parameter
-3. Added `discoveryService.UpdateServer(server)` calls after all state transitions:
-   - `StopServer()` - both code paths
-   - `StartServer()` - after setting PID
-   - `monitorProcess()` - all state transitions (error, stopped, running)
-
-#### Verification
-Terminal logs confirm fix working:
-```
-time=2025-10-23T20:53:23.267 level=INFO msg="StopServer: Cache synchronized with stopped state"
-```
-
-**Test Evidence:** 
-- Original bug: `etc/MCPMANAGER_button_test_20251023T1908.txt`
-- Fixed version: `etc/MCPMANAGER_button_test_20251023T2102.txt`
-
-#### Related Issues
-During testing, discovered that UI table doesn't refresh in real-time after state changes. This is **NOT** part of this bug - it's a missing feature from the original specifications:
-- **FR-005**: "System MUST update server status in real-time without requiring manual page refresh"
-- **FR-047**: "System MUST display status changes immediately without manual refresh"
-
-**Note:** The backend (cache) is now correctly synchronized. The UI reactivity issue should be tracked as a separate implementation task for FR-005/FR-047, not as a bug.
-
-#### Files Modified
-- `internal/core/lifecycle/lifecycle.go` - Added cache synchronization
-- `app.go` - Updated dependency injection
-- `tests/integration/lifecycle_test.go` - Updated test signatures
-
-#### Specification References
-- Feature Spec: `specs/001-mcp-manager-specification/spec.md` (FR-006, FR-009)
-- Data Model: `specs/001-mcp-manager-specification/data-model.md` (MCPServer, ServerStatus)
-
----
-
-## Bug Reporting Guidelines
+## How to Report a Bug
 
 ### Before Reporting
 - Check existing bugs to avoid duplicates
