@@ -1,0 +1,14 @@
+spec-kit v1.0.0
+Vendored: 2025-10-18
+Source: https://github.com/github/spec-kit
+Maintainer: Hoyt
+
+DO NOT UPDATE MANUALLY - See project documentation for update process
+
+Changelog:
+- 2025-10-18: Initial vendoring for MCPManager project stability
+  * Copied 5 PowerShell scripts from local spec-kit repository
+  * Ensures reproducible builds for contributors
+  * Protects against upstream breaking changes
+  * Scripts: check-prerequisites.ps1, common.ps1, create-new-feature.ps1, 
+    setup-plan.ps1, update-agent-context.ps1

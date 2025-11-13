@@ -1,0 +1,22 @@
+Vendor spec-kit v1.0.0 scripts for reproducible builds
+
+- Copied 5 PowerShell scripts from local spec-kit repository
+- Added .specify/VERSION.txt to track vendored version
+- Created .specify/scripts/powershell/update-spec-kit.ps1 for future updates
+
+Why vendor instead of git submodule or direct reference?
+- Ensures stability and reproducibility for contributors
+- Users can clone repository and everything works immediately
+- Protects against upstream breaking changes
+- Allows controlled, tested updates at maintainer's discretion
+
+Scripts vendored:
+- check-prerequisites.ps1: Feature prerequisite validation
+- common.ps1: Shared utility functions
+- create-new-feature.ps1: Feature branch creation
+- setup-plan.ps1: Implementation plan initialization
+- update-agent-context.ps1: Agent file management
+
+Future spec-kit updates: Run .specify/scripts/powershell/update-spec-kit.ps1
+
+See .specify/VERSION.txt for version details

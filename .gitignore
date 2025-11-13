@@ -1,6 +1,6 @@
 # AI related
 .gemini/
-CLAUDE.md
+# CLAUDE.md is now in docs/ for developer reference (not gitignored)
 
 # Debug files
 *.dSYM/
@@ -36,12 +36,18 @@ bin/
 *.sublime-*
 
 # Kernel Module Compile Results
-*.mod*
+*.mod.c
+*.mod.o
+*.ko
 *.cmd
 modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Exception: Always track Go modules
+!go.mod
+!go.sum
 
 # Libraries
 *.lib
@@ -99,3 +105,16 @@ node_modules
 ehthumbs.db
 System Volume Information/
 Thumbs.db
+
+# Go specific
+*.exe
+*.test
+vendor/
+go.work
+go.work.sum
+
+# Wails specific
+build/
+frontend/dist/
+frontend/node_modules/
+wails_*_log.txt
