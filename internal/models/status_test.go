@@ -30,6 +30,7 @@ func TestServerStatusStateTransitions(t *testing.T) {
 		{"stopped to starting", StatusStopped, StatusStarting, true},
 		{"starting to running", StatusStarting, StatusRunning, true},
 		{"starting to error", StatusStarting, StatusError, true},
+		{"starting to stopped", StatusStarting, StatusStopped, true}, // Allow canceling startup
 		{"running to stopped", StatusRunning, StatusStopped, true},
 		{"running to error (crash)", StatusRunning, StatusError, true},
 		{"error to starting (retry)", StatusError, StatusStarting, true},
@@ -38,7 +39,6 @@ func TestServerStatusStateTransitions(t *testing.T) {
 		// Invalid transitions
 		{"stopped to running", StatusStopped, StatusRunning, false},
 		{"stopped to error", StatusStopped, StatusError, false},
-		{"starting to stopped", StatusStarting, StatusStopped, false},
 		{"error to running", StatusError, StatusRunning, false},
 		{"running to starting", StatusRunning, StatusStarting, false},
 	}

@@ -28,6 +28,7 @@ func NewServerStatus() *ServerStatus {
 // stopped -> starting (user initiates start)
 // starting -> running (startup successful)
 // starting -> error (startup failed)
+// starting -> stopped (user cancels startup)
 // running -> stopped (user initiates stop)
 // running -> error (crash/unexpected termination)
 // error -> starting (retry attempt)
@@ -35,7 +36,7 @@ func NewServerStatus() *ServerStatus {
 
 var validTransitions = map[StatusState][]StatusState{
 	StatusStopped:  {StatusStarting},
-	StatusStarting: {StatusRunning, StatusError},
+	StatusStarting: {StatusRunning, StatusError, StatusStopped}, // Allow canceling startup
 	StatusRunning:  {StatusStopped, StatusError},
 	StatusError:    {StatusStarting, StatusStopped},
 }
