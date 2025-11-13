@@ -93,6 +93,32 @@
       }
     };
   });
+
+  // Context-aware helper text for empty netstat
+  $: helpMessage = (() => {
+    if ($runningServers.length === 0) {
+      return null; // No help message if no servers are running
+    }
+
+    // Check if all running servers are stdio
+    const allStdio = $runningServers.every(s => s.transport === 'stdio');
+
+    if (allStdio) {
+      return {
+        type: 'info',
+        message: 'All running servers use stdio transport (pipes). They communicate via stdin/stdout and do not create network connections visible to netstat.'
+      };
+    }
+
+    if (connections.length === 0 && !loading && !error) {
+      return {
+        type: 'info',
+        message: 'Note: Only HTTP/SSE servers create network connections. Stdio servers communicate via pipes and won\'t appear here.'
+      };
+    }
+
+    return null;
+  })();
 </script>
 
 <div class="netstat-view">
@@ -146,8 +172,20 @@
             No network connections found for running servers.
           {/if}
         </p>
+        {#if helpMessage}
+          <div class="help-banner {helpMessage.type}">
+            <span class="help-icon">ℹ️</span>
+            <p>{helpMessage.message}</p>
+          </div>
+        {/if}
       </div>
     {:else}
+      {#if helpMessage}
+        <div class="help-banner-top {helpMessage.type}">
+          <span class="help-icon">ℹ️</span>
+          <p>{helpMessage.message}</p>
+        </div>
+      {/if}
       <div class="table-wrapper">
         <table class="connections-table">
           <thead>
@@ -378,6 +416,48 @@
     background-color: var(--bg-tertiary);
     text-align: center;
     font-size: var(--font-size-sm);
+  }
+
+  /* Help banner */
+  .help-banner,
+  .help-banner-top {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-md);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+  }
+
+  .help-banner.info {
+    background-color: rgba(33, 150, 243, 0.1);
+    border: 1px solid rgba(33, 150, 243, 0.3);
+    color: var(--text-secondary);
+  }
+
+  .help-banner-top {
+    margin: var(--spacing-md);
+    margin-bottom: 0;
+  }
+
+  .help-banner-top.info {
+    background-color: rgba(33, 150, 243, 0.1);
+    border: 1px solid rgba(33, 150, 243, 0.3);
+    color: var(--text-secondary);
+  }
+
+  .help-icon {
+    font-size: var(--font-size-lg);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .help-banner p,
+  .help-banner-top p {
+    margin: 0;
+    flex: 1;
   }
 
   /* API notice */

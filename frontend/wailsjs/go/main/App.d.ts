@@ -23,9 +23,13 @@ export function GetLogs(arg1:string,arg2:string,arg3:number,arg4:number):Promise
 
 export function GetMetrics(arg1:string):Promise<models.ServerMetrics>;
 
+export function GetNetstat(arg1:Array<number>):Promise<main.NetstatResponse>;
+
 export function GetServer(arg1:string):Promise<models.MCPServer>;
 
 export function GetServerStatus(arg1:string):Promise<models.ServerStatus>;
+
+export function GetServices():Promise<main.ServicesResponse>;
 
 export function GetUpdates(arg1:string):Promise<dependencies.UpdateInfo>;
 
@@ -50,7 +54,3 @@ export function UpdateApplicationState(arg1:models.ApplicationState):Promise<mai
 export function UpdateConfiguration(arg1:string,arg2:models.ServerConfiguration):Promise<models.ServerConfiguration>;
 
 export function WriteClientConfig(arg1:string,arg2:config.ClientConfig):Promise<void>;
-
-export function GetNetstat(arg1:number[]):Promise<main.NetstatResponse>;
-
-export function GetServices():Promise<main.ServicesResponse>;

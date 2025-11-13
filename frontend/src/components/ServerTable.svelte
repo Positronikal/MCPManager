@@ -6,7 +6,6 @@
   import DetailedLogsView from './DetailedLogsView.svelte';
   import StdioInfoModal from './StdioInfoModal.svelte';
   import ClientConfigEditorModal from './ClientConfigEditorModal.svelte';
-  import { onMount } from 'svelte';
 
   // Loading states for individual servers
   let loadingServers = new Map<string, string>(); // serverId -> action type
@@ -27,18 +26,11 @@
   // Client config editor state
   let showClientConfigEditor = false;
   let clientConfigEditorServer: MCPServer | null = null;
-  
-  // Fetch servers on component mount
-  onMount(async () => {
-    try {
-      const response = await api.discovery.listServers();
-      servers.set(response.servers);
-      addNotification('success', `Found ${response.count} server${response.count !== 1 ? 's' : ''}`);
-    } catch (error) {
-      console.error('Failed to fetch servers:', error);
-      addNotification('error', `Failed to load servers: ${error.message}`);
-    }
-  });
+
+  // Note: No need to fetch servers on mount - App.svelte triggers refreshDiscovery()
+  // on startup, and the backend emits servers:initial event which populates the store
+  // via events.ts handlers. This avoids race condition where listServers() is called
+  // before backend completes initial discovery.
 
   // Handle Start server action
   async function handleStart(server: MCPServer) {
@@ -228,6 +220,7 @@
             <th class="col-status">Status</th>
             <th class="col-name">Name</th>
             <th class="col-version">Version</th>
+            <th class="col-transport">Transport</th>
             <th class="col-capabilities">Capabilities</th>
             <th class="col-uptime">Uptime</th>
             <th class="col-pid">PID</th>
@@ -261,6 +254,13 @@
               <!-- Version -->
               <td class="col-version">
                 <span class="text-secondary">{server.version || 'N/A'}</span>
+              </td>
+
+              <!-- Transport -->
+              <td class="col-transport">
+                <span class="transport-badge transport-{server.transport || 'unknown'}">
+                  {server.transport || 'unknown'}
+                </span>
               </td>
 
               <!-- Capabilities -->
@@ -477,6 +477,7 @@
   .col-status { width: 120px; }
   .col-name { width: auto; min-width: 200px; }
   .col-version { width: 100px; }
+  .col-transport { width: 90px; }
   .col-capabilities { width: 200px; }
   .col-uptime { width: 100px; }
   .col-pid { width: 80px; }
@@ -586,6 +587,41 @@
     padding: 2px 6px;
   }
 
+  /* Transport badge */
+  .transport-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    border: 1px solid;
+  }
+
+  .transport-stdio {
+    background-color: rgba(33, 150, 243, 0.2);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+  }
+
+  .transport-http {
+    background-color: rgba(76, 175, 80, 0.2);
+    border-color: var(--status-running);
+    color: var(--status-running);
+  }
+
+  .transport-sse {
+    background-color: rgba(156, 39, 176, 0.2);
+    border-color: #9c27b0;
+    color: #9c27b0;
+  }
+
+  .transport-unknown {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-muted);
+  }
+
   /* Monospace text */
   .mono {
     font-family: var(--font-mono);
@@ -676,6 +712,7 @@
 
   @media (max-width: 768px) {
     .col-version,
+    .col-transport,
     .col-uptime {
       display: none;
     }

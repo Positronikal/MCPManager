@@ -226,6 +226,36 @@ export namespace main {
 		    return a;
 		}
 	}
+	export class NetstatResponse {
+	    connections: platform.NetstatEntry[];
+	
+	    static createFrom(source: any = {}) {
+	        return new NetstatResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.connections = this.convertValues(source["connections"], platform.NetstatEntry);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class OpenExplorerResponse {
 	    success: boolean;
 	    message: string;
@@ -256,60 +286,18 @@ export namespace main {
 	        this.status = source["status"];
 	    }
 	}
-	export class UpdateApplicationStateResponse {
-	    message: string;
-
-	    static createFrom(source: any = {}) {
-	        return new UpdateApplicationStateResponse(source);
-	    }
-
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.message = source["message"];
-	    }
-	}
-	export class NetstatResponse {
-	    connections: platform.NetstatEntry[];
-
-	    static createFrom(source: any = {}) {
-	        return new NetstatResponse(source);
-	    }
-
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.connections = this.convertValues(source["connections"], platform.NetstatEntry);
-	    }
-
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
-	}
 	export class ServicesResponse {
 	    services: platform.Service[];
-
+	
 	    static createFrom(source: any = {}) {
 	        return new ServicesResponse(source);
 	    }
-
+	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.services = this.convertValues(source["services"], platform.Service);
 	    }
-
+	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
 		    if (!a) {
 		        return a;
@@ -327,6 +315,18 @@ export namespace main {
 		    }
 		    return a;
 		}
+	}
+	export class UpdateApplicationStateResponse {
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateApplicationStateResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.message = source["message"];
+	    }
 	}
 
 }
@@ -671,20 +671,19 @@ export namespace models {
 
 }
 
-
 export namespace platform {
-
+	
 	export class NetstatEntry {
 	    protocol: string;
 	    localAddress: string;
 	    remoteAddress: string;
 	    state: string;
 	    pid: number;
-
+	
 	    static createFrom(source: any = {}) {
 	        return new NetstatEntry(source);
 	    }
-
+	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.protocol = source["protocol"];
@@ -699,11 +698,11 @@ export namespace platform {
 	    status: string;
 	    description: string;
 	    pid?: number;
-
+	
 	    static createFrom(source: any = {}) {
 	        return new Service(source);
 	    }
-
+	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.name = source["name"];
@@ -714,3 +713,4 @@ export namespace platform {
 	}
 
 }
+
