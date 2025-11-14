@@ -1,10 +1,20 @@
 # Future Enhancements & Optimizations
 
-This document tracks potential feature improvements and optimizations for MCP Manager that should be considered after initial release and burn-in period.
+This document tracks potential feature improvements, optimizations, and value adds for MCP Manager that should be considered after initial release and burn-in period. These items are in no particular order.
 
-## Priority: Medium - Post-Release Optimizations
+## Implementation
 
-### 1. Netstat View Preferences
+**Requirements:**
+1. Both enhancements require extending `models.UserPreferences` struct
+2. Frontend needs settings/preferences UI panel
+3. Consider adding "Advanced Settings" section to avoid cluttering main UI
+
+**Validation Needed:**
+- Measure actual performance impact in production use
+- Gather user feedback on whether these views are frequently used
+- Determine if resource usage justifies adding preference complexity
+
+## Netstat View Preferences
 
 **Rationale:** Not all users need network connection monitoring, especially when running only stdio transport servers.
 
@@ -20,7 +30,7 @@ This document tracks potential feature improvements and optimizations for MCP Ma
 - **Benefit:** Reduces unnecessary system calls for users who don't need network monitoring
 - **Priority:** Wait for user feedback - stdio-only users may not use this view at all
 
-### 2. Services View Optimizations
+## Services View Optimizations
 
 **Rationale:** System services change infrequently, but the view currently queries on every refresh.
 
@@ -36,21 +46,7 @@ This document tracks potential feature improvements and optimizations for MCP Ma
 - **Benefit:** Reduces subprocess overhead (313 services on Windows = ~1-10MB per query)
 - **Priority:** Monitor real-world usage patterns first
 
-## Implementation Notes
-
-**Requirements:**
-1. Both enhancements require extending `models.UserPreferences` struct
-2. Frontend needs settings/preferences UI panel
-3. Consider adding "Advanced Settings" section to avoid cluttering main UI
-
-**Validation Needed:**
-- Measure actual performance impact in production use
-- Gather user feedback on whether these views are frequently used
-- Determine if resource usage justifies adding preference complexity
-
-## Priority: Low - Testing Infrastructure
-
-### 3. End-to-End Process/IPC Testing
+## End-to-End Process/IPC Testing
 
 **Rationale:** Current test suite lacks true end-to-end tests that exercise the Wails desktop application as users would interact with it.
 
@@ -103,11 +99,158 @@ This document tracks potential feature improvements and optimizations for MCP Ma
 3. Wails E2E testing is non-trivial and tooling is immature
 4. Better to gather real-world usage data first before investing in complex test infrastructure
 
-## Related Issues
+## Main Menu
+
+**Rationale:**
+< ... >
+
+**Proposed Features:**
+Add typical main menu items, e.g. File, Edit, View, Window, Help.Add typical main menu items, e.g. File, Edit, View, Window, Help.
+
+**Cost/Benefit:**
+- **Cost:** < ... >
+- **Benefit:** < ... >
+- **Priority:** < ... >
+
+## Tools Pane
+
+**Rationale:**
+< ... >
+
+**Proposed Features:**
+Change header from "MCP Manager" to "Tools".
+
+**Cost/Benefit:**
+- **Cost:** < ... >
+- **Benefit:** < ... >
+- **Priority:** < ... >
+
+## UI Scaling
+
+**Rationale:**
+< ... >
+
+**Proposed Features:**
+Scale app down to "utility size" similar to XAMPP's UI while maintaining HiDPI compatibility (see .\app_scaling_comparison.png).
+
+**Cost/Benefit:**
+- **Cost:** < ... >
+- **Benefit:** < ... >
+- **Priority:** < ... >
+
+## Theme Selector
+
+**Rationale:**
+< ... >
+
+**Proposed Features:**
+Add theming, if only the options Light, Dark, and System.
+
+**Cost/Benefit:**
+- **Cost:** < ... >
+- **Benefit:** < ... >
+- **Priority:** < ... >
+
+## Server Table View
+
+**Rationale:**
+< ... >
+
+**Proposed Features:**
+Define an easily user-accessible standard MCP installation location[^1] in addition to those locations MCP Manager already looks to find MCP servers that a user can clone to and MCP Manager can discover so that new servers appear in the Server Table View like the others and regardless whether an MCP client is configured to use them or not. Pertinent documentation, such as README.md, must be updated to instruct users to create this directory and place unpacked MCP servers here. Optionally, the directory can be created as part of an installer solution.
+
+[^1]: Linux & Mac: "~/.local/mcp-servers"
+      Windows: "%USERPROFILE%\.local\mcp-servers"
+
+**Cost/Benefit:**
+- **Cost:** < ... >
+- **Benefit:** < ... >
+- **Priority:** < ... >
+
+## Shell View
+
+**Rationale:**
+< ... >
+
+**Proposed Features:**
+Left-align the Platform terminal list and Quick Tips section.
+
+**Cost/Benefit:**
+- **Cost:** < ... >
+- **Benefit:** < ... >
+- **Priority:** < ... >
+
+## Explorer View
+
+**Rationale:**
+< ... >
+
+**Proposed Features:**
+Open Directory buttons should open the standard MCP server installation directory (see [Server Table View](#serverttableview).
+
+**Cost/Benefit:**
+- **Cost:** < ... >
+- **Benefit:** < ... >
+- **Priority:** < ... >
+
+## Log Viewer
+
+**Rationale:**
+< ... >
+
+**Proposed Features:**
+Add information to identify that the logs to be displayed are those logs related to server operations run from MCP Manager, not server run logs generally.
+
+**Cost/Benefit:**
+- **Cost:** < ... >
+- **Benefit:** < ... >
+- **Priority:** < ... >
+
+## Application Icon
+
+**Rationale:**
+< ... >
+
+**Proposed Features:**
+Design and deploy an appropriate app icon set to replace the Wails icons currently in use. These should be made part of the program executable in the normal fashion for that executable type, e.g. Linux ELF, Mac Mach-O, or WIN32 PE.
+
+**Cost/Benefit:**
+- **Cost:** < ... >
+- **Benefit:** < ... >
+- **Priority:** < ... >
+
+## Continuous Operations
+
+**Rationale:**
+< ... >
+
+**Proposed Features:**
+Allow MCP Manager to minimize to and restore from the System Tray allowing it to continue running in the background and having an appropriate context menu for the systray icon. App notifications should use the host OS user notification system when running in the background.
+
+**Cost/Benefit:**
+- **Cost:** < ... >
+- **Benefit:** < ... >
+- **Priority:** < ... >
+
+## Related Issues and Additional notes
 
 - None yet - document as issues arise during burn-in period
+- See also .\Issues.md
 
 ---
+## <entry item stub>
 
-*Last Updated: 2025-11-12*
+**Rationale:**
+< ... >
+
+**Proposed Features:**
+< ... >
+
+**Cost/Benefit:**
+- **Cost:** < ... >
+- **Benefit:** < ... >
+- **Priority:** < ... >
+---
+
+*Last Updated: 2025-11-14*
 *Status: Deferred pending real-world usage data*
