@@ -713,7 +713,7 @@ func (a *App) OpenExplorer(path string) (*OpenExplorerResponse, error) {
 		return &OpenExplorerResponse{
 			Success: false,
 			Message: "Path cannot be empty",
-		}, fmt.Errorf("path cannot be empty")
+		}, nil
 	}
 
 	// Use platform-specific command to open file explorer
@@ -722,7 +722,7 @@ func (a *App) OpenExplorer(path string) (*OpenExplorerResponse, error) {
 		return &OpenExplorerResponse{
 			Success: false,
 			Message: fmt.Sprintf("Failed to open explorer: %v", err),
-		}, err
+		}, nil
 	}
 
 	return &OpenExplorerResponse{
@@ -747,7 +747,7 @@ func (a *App) LaunchShell() (*LaunchShellResponse, error) {
 		return &LaunchShellResponse{
 			Success: false,
 			Message: fmt.Sprintf("Failed to launch shell: %v", err),
-		}, err
+		}, nil
 	}
 
 	return &LaunchShellResponse{

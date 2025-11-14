@@ -9,10 +9,10 @@
 
     try {
       const response = await LaunchShell();
-      if (response.Success) {
-        addNotification('success', response.Message || 'Shell launched successfully');
+      if (response.success) {
+        addNotification('success', response.message || 'Shell launched successfully');
       } else {
-        addNotification('error', response.Message || 'Failed to launch shell');
+        addNotification('error', response.message || 'Failed to launch shell');
       }
     } catch (err: any) {
       addNotification('error', err.message || 'Failed to launch shell');

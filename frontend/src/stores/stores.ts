@@ -14,7 +14,7 @@ export interface MCPServer {
   dependencies?: Dependency[];
   discoveredAt: string;
   lastSeenAt: string;
-  source: 'client_config' | 'filesystem' | 'process';
+  source: 'client_config' | 'extension' | 'filesystem' | 'process';
 }
 
 export interface ServerStatus {

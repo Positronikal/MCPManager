@@ -17,7 +17,7 @@
   let searchQuery = '';
   let searchInput = ''; // Temporary input value for debouncing
   let searchTimeout: number | null = null;
-  let statusFilter: string | null = null;
+  let statusFilter: string = '';
 
   onMount(() => {
     loadServices();
@@ -51,8 +51,8 @@
         }
       }
 
-      // Filter by status
-      if (statusFilter && service.status !== statusFilter) {
+      // Filter by status (case-insensitive comparison)
+      if (statusFilter && statusFilter !== '' && service.status.toLowerCase() !== statusFilter.toLowerCase()) {
         return false;
       }
 
@@ -124,7 +124,7 @@
     </div>
     <div class="header-actions">
       <select class="filter-select" bind:value={statusFilter}>
-        <option value={null}>All Statuses</option>
+        <option value="">All Statuses</option>
         <option value="running">Running</option>
         <option value="stopped">Stopped</option>
         <option value="starting">Starting</option>

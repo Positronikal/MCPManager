@@ -5,7 +5,7 @@
   let searchQuery = '';
   let searchInput = ''; // Temporary input value for debouncing
   let searchTimeout: number | null = null;
-  let selectedSource: string | null = null;
+  let selectedSource: string = '';
 
   // Filter servers by search and source
   $: displayedServers = $servers.filter(server => {
@@ -13,7 +13,7 @@
         !server.installationPath.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
-    if (selectedSource && server.source !== selectedSource) {
+    if (selectedSource && selectedSource !== '' && server.source !== selectedSource) {
       return false;
     }
     return true;
@@ -34,10 +34,10 @@
 
       // Use backend API to open file explorer
       const response = await OpenExplorer(directory);
-      if (response.Success) {
+      if (response.success) {
         addNotification('success', `Opened ${serverName} directory`);
       } else {
-        addNotification('error', response.Message || 'Failed to open directory');
+        addNotification('error', response.message || 'Failed to open directory');
       }
     } catch (error: any) {
       addNotification('error', `Failed to open directory: ${error.message || error}`);
@@ -82,10 +82,11 @@
     </div>
     <div class="header-actions">
       <select class="filter-select" bind:value={selectedSource}>
-        <option value={null}>All Sources</option>
-        <option value="client_config">Client Config</option>
-        <option value="filesystem">Filesystem</option>
-        <option value="process">Process</option>
+        <option value="">All Sources</option>
+        <option value="client_config">Client Config Files</option>
+        <option value="extension">Claude Extensions</option>
+        <option value="filesystem">Filesystem Scan</option>
+        <option value="process">Running Processes</option>
       </select>
       <input
         type="search"

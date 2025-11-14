@@ -3,7 +3,7 @@
 
 export type StatusState = 'stopped' | 'starting' | 'running' | 'error';
 export type LogSeverity = 'info' | 'success' | 'warning' | 'error';
-export type DiscoverySource = 'client_config' | 'filesystem' | 'process';
+export type DiscoverySource = 'client_config' | 'extension' | 'filesystem' | 'process';
 export type DependencyType = 'runtime' | 'library' | 'tool' | 'environment';
 
 export interface MCPServer {
