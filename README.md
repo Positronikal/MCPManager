@@ -1,50 +1,98 @@
 # MCP Manager
-**GPLv3**
+
+![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
+![Go Version](https://img.shields.io/badge/go-%3E%3D1.21-blue)
+![Status](https://img.shields.io/badge/status-v1.0--rc-green)
+
+**A cross-platform desktop application for managing Model Context Protocol servers**
+
+---
 
 ## What It Does
-MCP Manager is a cross-platform desktop application for managing Model Context Protocol (MCP) servers. It provides centralized discovery, monitoring, and control of MCP servers across different clients (Claude Desktop, Cursor, etc.). Built with Go and Wails, MCP Manager offers a native desktop interface with real-time server status monitoring, log aggregation, configuration management, and lifecycle control.
 
-Key capabilities:
-- **Discovery**: Automatically finds MCP servers from client configurations, Claude Extensions, filesystem scans, and running processes
-- **Lifecycle Management**: Start, stop, and restart MCP servers with transport-aware handling (stdio vs HTTP/SSE)
-- **Monitoring**: Real-time log aggregation, resource metrics (CPU, memory), and status tracking
-- **Configuration**: View and manage server settings, environment variables, and command-line arguments
-- **Utilities**: Built-in tools for network analysis (Netstat), system services viewing, file explorer integration, and shell access
-- **Dependencies**: Automatic detection of required runtime dependencies (Node.js, Python, etc.) and update monitoring
+MCP Manager is a native desktop application for managing Model Context Protocol (MCP) servers. It provides centralized discovery, monitoring, and control of MCP servers across different clients (Claude Desktop, Cursor, etc.). Built with Go and Wails, MCP Manager offers a unified interface for all your MCP server management needs.
+
+### Features at a Glance
+
+| Feature | Description |
+|---------|-------------|
+| 🔍 **Auto-Discovery** | Finds servers from client configs, extensions, filesystem, and running processes |
+| 🎮 **Lifecycle Control** | Start, stop, restart with transport-aware handling (stdio/HTTP/SSE) |
+| 📊 **Real-Time Monitoring** | Log aggregation, CPU/memory metrics, status tracking |
+| ⚙️ **Configuration** | GUI-based editing of settings, environment variables, arguments |
+| 🛠️ **Utilities** | Network analysis (Netstat), system services, file explorer, shell access |
+| 📦 **Dependency Management** | Auto-detect Node.js, Python, and other runtime requirements |
 
 ## Why It's Useful
-Working with multiple MCP servers typically requires managing separate configuration files, terminal windows, and log outputs. MCP Manager consolidates this complexity into a single interface, allowing developers and system administrators to:
-- See all MCP servers at a glance with their current status
-- Monitor logs from multiple servers in one unified view
-- Troubleshoot issues without switching between terminals
-- Verify dependencies and server health before use
-- Manage server configurations without manual file editing
-- Track network connections and resource usage per server
 
-Designed to handle up to 50 servers efficiently, MCP Manager is ideal for power users and team environments with complex MCP server deployments.
+Managing multiple MCP servers means juggling config files, terminal windows, and log outputs. MCP Manager consolidates this complexity into a single interface.
 
-## How To Get Started
-See **[USING.md](./USING.md)** for detailed installation and usage instructions.
+**Before MCP Manager:**
+- 🔍 Hunt through config files to find which servers are installed
+- 📝 Track multiple terminal windows for logs
+- 🔧 Manually edit JSON files for configuration changes
+- ❓ No visibility into server health or resource usage
 
-Quick start:
-1. Ensure you have Go 1.21+ installed
-2. Install Wails v2: `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
-3. Clone this repository
-4. Run `wails dev` for development mode, or `wails build` for production binary
-5. Launch MCP Manager - it will automatically discover your installed MCP servers
+**With MCP Manager:**
+- ✅ See all servers at a glance with real-time status
+- ✅ Unified log viewer with filtering and search
+- ✅ GUI-based configuration editing
+- ✅ Resource monitoring and dependency validation
+- ✅ One-click start/stop/restart operations
 
-## Where To Get Help
-- **Documentation**: See the **[docs/](./docs)** directory for development documentation
-- **Bug Reports**: See **[BUGS.md](./BUGS.md)** for bug tracking and reporting guidelines
-- **Security Issues**: See **[SECURITY.md](./SECURITY.md)** for vulnerability reporting procedures
-- **Contributing**: See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for contribution guidelines
-- **GitHub Issues**: Report bugs and request features via GitHub Issues
-- **Specifications**: See **[specs/](./specs)** for feature specifications and implementation plans
+**Built for power users**: Efficiently handles up to 50 servers - ideal for developers and teams with complex MCP deployments.
+
+## Prerequisites
+
+- **Go 1.21+** - [Download](https://go.dev/dl/)
+- **Node.js 16+** - For frontend development (optional for building from source)
+- **Wails v2** - Desktop application framework
+
+**Platform-specific:**
+- **Windows**: WebView2 (usually pre-installed on Windows 10+)
+- **macOS**: macOS 10.13+ (High Sierra or later)
+- **Linux**: webkit2gtk package (`sudo apt install webkit2gtk-4.0` on Debian/Ubuntu)
+
+## Quick Start
+
+```bash
+# Install Wails
+go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+# Clone and run
+git clone https://github.com/Positronikal/MCPManager.git
+cd MCPManager
+wails dev
+```
+
+MCP Manager will automatically discover your installed MCP servers on first launch.
+
+**For detailed installation and usage**, see [USING.md](./USING.md).
+
+## Project Status
+
+- ✅ **Core Features**: Complete (98/98 specification tasks)
+- ✅ **Cross-Platform**: Windows, macOS, Linux
+- ✅ **Transport Support**: stdio, HTTP, SSE
+- ✅ **Test Coverage**: All tests passing (unit, contract, integration, performance)
+- 📦 **Version**: v1.0.0-rc (Release Candidate)
+- 📚 **Documentation**: Complete
+
+## Community & Support
+
+- 📖 **Documentation**: See the [docs/](./docs) directory for development documentation
+- 🐛 **Bug Reports**: See [BUGS.md](./BUGS.md) for bug tracking and reporting guidelines
+- 🔒 **Security**: See [SECURITY.md](./SECURITY.md) for vulnerability reporting procedures
+- 🤝 **Contributing**: See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines
+- 📋 **Specifications**: See [specs/](./specs) for feature specifications and implementation plans
 
 ## Adherence to Standards
+
 This project adheres to the [Positronikal Coding Standards](https://github.com/positronikal/coding-standards/tree/main/standards). All contributors are expected to be familiar with these standards.
 
 ## Repository Structure Notes
+
 This project follows **Go and Wails framework conventions** where they provide better tooling support and developer experience. While we maintain compatibility with Positronikal standards for documentation and security practices, the directory structure reflects idiomatic Go project layout and Wails requirements:
 
 ### Go/Wails Conventions Used
@@ -71,9 +119,11 @@ This project follows **Go and Wails framework conventions** where they provide b
 This hybrid approach allows the project to benefit from Go's excellent tooling (go modules, go test, gopls) and Wails' build system while maintaining Positronikal documentation and security standards.
 
 ## Repository Map
+
 The following directories and files comprise the MCP Manager repository:
 
 ### Go Application Structure
+
 **[cmd/](./cmd 'cmd/')**
 - Application entry points and command-line interfaces
 - `mcpmanager/` - Main application entry point
@@ -91,12 +141,13 @@ The following directories and files comprise the MCP Manager repository:
 
 **[tests/](./tests 'tests/')**
 - Test files organized by type:
-- `unit/` - Unit tests for individual packages
-- `contract/` - API contract validation tests
-- `integration/` - Service interaction tests
-- `performance/` - Benchmarks for startup time and memory usage
+  - `unit/` - Unit tests for individual packages
+  - `contract/` - API contract validation tests
+  - `integration/` - Service interaction tests
+  - `performance/` - Benchmarks for startup time and memory usage
 
 ### Frontend Application
+
 **[frontend/](./frontend 'frontend/')**
 - Svelte 4.x frontend application
 - `src/` - Source code (components, services, stores, types)
@@ -111,6 +162,7 @@ The following directories and files comprise the MCP Manager repository:
 - **Note**: This is the single source of truth for built executables during development
 
 ### Documentation & Standards
+
 **[docs/](./docs 'docs/')**
 - Development documentation for understanding and maintaining the project
 
@@ -132,6 +184,7 @@ The following directories and files comprise the MCP Manager repository:
 - Build scripts, automation tools, and helper utilities
 
 ### Special Directories
+
 **[.specify/](./.specify '.specify/')**
 - Spec Kit framework for specification-driven development
 - `memory/` - Project constitution and long-term memory
@@ -147,6 +200,7 @@ The following directories and files comprise the MCP Manager repository:
 - Issue templates and repository configuration
 
 ### Go/Wails Build Files
+
 **[app.go](./app.go 'app.go')**
 - Wails application bindings exposing Go methods to frontend
 
@@ -166,6 +220,7 @@ The following directories and files comprise the MCP Manager repository:
 - Git configuration for line endings and ignored files
 
 ### Standard Repository Files
+
 **[ATTRIBUTION.md](./ATTRIBUTION.md 'ATTRIBUTION.md')**
 - Credit to upstream projects and dependencies
 
@@ -195,3 +250,7 @@ The following directories and files comprise the MCP Manager repository:
 
 **[README.md](./README.md 'README.md')**
 - This document - project overview and navigation
+
+---
+
+*Last Updated: 2025-11-14*

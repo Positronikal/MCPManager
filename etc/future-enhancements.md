@@ -162,6 +162,8 @@ Define an easily user-accessible standard MCP installation location[^1] in addit
 [^1]: Linux & Mac: "~/.local/mcp-servers"
       Windows: "%USERPROFILE%\.local\mcp-servers"
 
+Fix Explorer View > Status filter button functionality. Only "All Sources" is working. "Client Config", "Filesystem", "Process" are not and only return "No servers found." Options should be changed to reflect known MCP server installation locations for all supported MCP clients.
+
 **Cost/Benefit:**
 - **Cost:** < ... >
 - **Benefit:** < ... >
@@ -231,6 +233,100 @@ Allow MCP Manager to minimize to and restore from the System Tray allowing it to
 - **Cost:** < ... >
 - **Benefit:** < ... >
 - **Priority:** < ... >
+
+## Binary Release Distribution
+
+**Rationale:**
+MCP has incredible potential but is stuck in "developer early adopter" mode. Non-technical users hit barriers at "install Node.js, clone repos, npm install, configure JSON files" and give up. This leads to negative perception ("MCP sucks") spreading on social media, unfairly maligning the technology. MCP Manager can be the gateway to MCP adoption by making it accessible to non-technical users - but only if they can actually run it without building from source.
+
+**Proposed Features:**
+
+### Release Packaging
+- [ ] **Windows Distribution**
+  - `.exe` installer (NSIS or WiX tooling)
+  - Portable `.exe` (single file, no installer required)
+  - Code signing certificate (prevents "Unknown Publisher" warnings)
+  - WebView2 runtime bundled or auto-installed
+
+- [ ] **macOS Distribution**
+  - `.dmg` disk image (standard Mac distribution format)
+  - Code signed and notarized (required for Gatekeeper compliance)
+  - Universal binary (Intel + Apple Silicon support)
+
+- [ ] **Linux Distribution**
+  - `.AppImage` (single-file, works on most distros - highest priority)
+  - `.deb` package (Debian/Ubuntu)
+  - `.rpm` package (Fedora/RHEL)
+  - Flatpak (optional, increasingly popular)
+
+### Release Infrastructure
+- [ ] **Automated Build Pipeline**
+  - GitHub Actions workflow for multi-platform builds
+  - Automated testing on all target platforms
+  - Version tagging and release note generation
+  - Asset upload to GitHub Releases
+
+- [ ] **Release Checklist**
+  - Semantic versioning (v1.0.0 format)
+  - User-focused release notes (not developer-focused)
+  - Dead-simple installation instructions (assume zero technical knowledge)
+  - Minimum system requirements clearly stated
+  - Screenshots/video showing functionality in 30 seconds
+  - Quick start guide: "Install → Launch → See your servers"
+
+### Distribution Channels
+- [ ] **Primary**: GitHub Releases (free, reliable, version history)
+- [ ] **Secondary**: Direct downloads from project website (enables metrics)
+- [ ] **Future**: Package managers (Homebrew, Chocolatey, winget, apt repositories)
+- [ ] **Ecosystem**: Get listed on modelcontextprotocol.io as official tool
+
+### Documentation Requirements
+- [ ] Installation guide with platform-specific instructions
+- [ ] Troubleshooting guide for common issues
+- [ ] Video walkthrough (2-3 minutes showing install → first use)
+- [ ] FAQ covering non-technical user questions
+
+### Marketing/Positioning
+Position as **"The Missing Control Panel for MCP"**:
+- "Finally understand what MCP servers you have"
+- "Start, stop, and monitor servers without touching config files"
+- "See logs and errors in one place instead of scattered terminal windows"
+- "No command line required - just install and run"
+
+Sample announcement text:
+> "Tried MCP but got frustrated with configuration? MCP Manager gives you a simple desktop app to discover, manage, and monitor all your MCP servers. No command line required. Download for Windows/Mac/Linux →"
+
+**Cost/Benefit:**
+- **Cost:** Medium-High (2-4 weeks initial setup)
+  - GitHub Actions workflow configuration
+  - Code signing certificates ($100-300/year for Windows, $99/year for macOS)
+  - Testing on multiple platforms and OS versions
+  - Documentation creation (guides, videos, screenshots)
+  - Community engagement and support preparation
+- **Benefit:** Very High (ecosystem impact)
+  - Dramatically lowers barrier to MCP adoption
+  - Expands user base beyond developers
+  - Reduces "MCP is too hard" negative perception
+  - Positions MCP Manager as essential MCP ecosystem tool
+  - Enables organic growth through user recommendations
+  - Provides usage data and feedback for future improvements
+- **Priority:** High - Should be completed before or immediately after v1.0.0 release
+
+**Success Metrics:**
+- Download count across platforms
+- User retention (downloads vs active users)
+- Community feedback (GitHub issues, discussions)
+- Reduction in "MCP is too complicated" sentiment
+- Increase in MCP server usage generally (tracked via telemetry if added)
+
+**Dependencies:**
+- Code signing certificates acquired
+- GitHub Actions workflow tested and validated
+- Installation documentation completed
+- At least one promotional video/walkthrough created
+
+**Why High Priority:**
+The current MCP ecosystem suffers from an adoption problem, not a technology problem. MCP Manager is positioned to solve this by being the first truly user-friendly tool for MCP management. Without binary releases, it remains a developer tool. With binary releases, it becomes the gateway that brings MCP to mainstream users - which benefits the entire ecosystem, not just this project.
 
 ## Related Issues and Additional notes
 
