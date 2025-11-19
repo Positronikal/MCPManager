@@ -99,74 +99,79 @@ This document tracks potential feature improvements, optimizations, and value ad
 3. Wails E2E testing is non-trivial and tooling is immature
 4. Better to gather real-world usage data first before investing in complex test infrastructure
 
-## Main Menu
+## Menu Bar
 
 **Rationale:**
-< ... >
+Users expect menu bars at the top of application windows (Windows) or or displayed as global menu bars at the top of the desktop (Unix-like systems, i.e. Top Bar/Panel - GNOME/Unity, Application Menu Bar - KDE Plasma, Menu Bar - macOS).
 
 **Proposed Features:**
-Add typical main menu items, e.g. File, Edit, View, Window, Help.Add typical main menu items, e.g. File, Edit, View, Window, Help.
+Add typical menu bar items, e.g. File, Edit, View, Window, Help, etc.
 
 **Cost/Benefit:**
 - **Cost:** < ... >
-- **Benefit:** < ... >
+- **Benefit:** Unix Rule of Least Surprise.
 - **Priority:** < ... >
 
-## Tools Pane
+## Navigation Pane
 
 **Rationale:**
-< ... >
+Current UI presents the app name "MCP Manager" in three locations: the top window bar, the app header pane, and the left-side navigation pane header. Both the top bar and app header pane locations are expected locations for this type of branding, but the navigation header pane isn't since a user would expect this to describe what is found in the pane below it, which is the "UTILITIES" separator followed by each of the accompanying utilities, e.g. Netstat, Shell, Explorer, etc.
+
+This pane also has only one category of item: UTILITIES. Adding a new category, "DIAGNOSTICS", allows segregation by use case and helps a user decide when to use any item intuitively without having to provide explicit instructions. Netstat and Services are purely monitoring and diagnostics tools, where Shell and Explorer provide utilitarian potential to make changes. Help is in a separate category itself and can be segregated from the others with a simple horizontal graphic.
 
 **Proposed Features:**
-Change header from "MCP Manager" to "Tools".
+Change header from "MCP Manager" to "Views" (see .\nav_pane_change.png) and add a new .
 
 **Cost/Benefit:**
 - **Cost:** < ... >
-- **Benefit:** < ... >
-- **Priority:** < ... >
+- **Benefit:** Unix Rules of Least Surprise and Extensibility. This also leaves open the possibility that this pane may included additional categories in the future.
+- **Priority:** QUICK WIN!
 
 ## UI Scaling
 
 **Rationale:**
-< ... >
+MCP Manager is intended to serve a utility purpose. Utilities like this, e.g. XAMPP's control panel, are typically scaled small so that when the UI is open, it's as non-blocking and desktop-space conservative as possible. This is different from an application where interactive usage is the core expectation, e.g. Microsoft Word. Bewing small and unobtrusive allows a user to "dock" the UI somewhere on the desktop to keep an eye on it while the rest of the desktop area is used for interactive apps the user is actively working in.
 
 **Proposed Features:**
 Scale app down to "utility size" similar to XAMPP's UI while maintaining HiDPI compatibility (see .\app_scaling_comparison.png).
 
 **Cost/Benefit:**
 - **Cost:** < ... >
-- **Benefit:** < ... >
+- **Benefit:** Unix Rule of Least Surprise.
 - **Priority:** < ... >
 
 ## Theme Selector
 
 **Rationale:**
-< ... >
+User-selectable themes have become ubiquitous and are expected options for today's apps.
 
 **Proposed Features:**
-Add theming, if only the options Light, Dark, and System.
+Add a "Themes" option to [View menu](#menubar), if only the options Light, Dark, and System.
 
 **Cost/Benefit:**
 - **Cost:** < ... >
-- **Benefit:** < ... >
+- **Benefit:** Unix Rule of Least Surprise.
 - **Priority:** < ... >
 
 ## Server Table View
 
 **Rationale:**
-< ... >
+Defining a user-accessible standard MCP installation location[^1] for MCP servers allows MCP Manager to discover them automatically. Users clone/install MCP servers to this standard directory and MCP Manager automatically discovers them (new filesystem discovery source). Servers appear in the table view regardless of whether any MCP client is configured to use them. This becomes the "canonical" place for MCP servers on a system in addition to any existing standard locations, e.g. "%APPDATA%\Claude\Claude Extensions".
 
 **Proposed Features:**
-Define an easily user-accessible standard MCP installation location[^1] in addition to those locations MCP Manager already looks to find MCP servers that a user can clone to and MCP Manager can discover so that new servers appear in the Server Table View like the others and regardless whether an MCP client is configured to use them or not. Pertinent documentation, such as README.md, must be updated to instruct users to create this directory and place unpacked MCP servers here. Optionally, the directory can be created as part of an installer solution.
+Add a defined standard MCP server installation directory that MCP Manager looks in during discovery to those it's already designed to inspect so that new servers appear in the Server Table View:
+- Linux & Mac: "~/.local/mcp-servers"
+- Windows: "%USERPROFILE%\.local\mcp-servers"
 
-[^1]: Linux & Mac: "~/.local/mcp-servers"
-      Windows: "%USERPROFILE%\.local\mcp-servers"
-
-Fix Explorer View > Status filter button functionality. Only "All Sources" is working. "Client Config", "Filesystem", "Process" are not and only return "No servers found." Options should be changed to reflect known MCP server installation locations for all supported MCP clients.
+These servers should appear in the list regardless whether an MCP client is configured to use them. Pertinent documentation, such as README.md, must be updated to instruct users to create this directory and place unpacked MCP servers here. Optionally, the directory can be created as part of an installer solution.
 
 **Cost/Benefit:**
 - **Cost:** < ... >
-- **Benefit:** < ... >
+- **Benefit:**
+  - Decouples server discovery from client configuration
+  - Gives users a clear, predictable place to install servers
+  - Allows MCP Manager to function as a standalone server management tool
+  - Mirrors established patterns (like ~/.local/bin for executables)
 - **Priority:** < ... >
 
 ## Shell View
@@ -180,7 +185,7 @@ Left-align the Platform terminal list and Quick Tips section.
 **Cost/Benefit:**
 - **Cost:** < ... >
 - **Benefit:** < ... >
-- **Priority:** < ... >
+- **Priority:** QUICK WIN!
 
 ## Explorer View
 
@@ -193,7 +198,7 @@ Open Directory buttons should open the standard MCP server installation director
 **Cost/Benefit:**
 - **Cost:** < ... >
 - **Benefit:** < ... >
-- **Priority:** < ... >
+- **Priority:** QUICK WIN!
 
 ## Log Viewer
 
@@ -206,7 +211,7 @@ Add information to identify that the logs to be displayed are those logs related
 **Cost/Benefit:**
 - **Cost:** < ... >
 - **Benefit:** < ... >
-- **Priority:** < ... >
+- **Priority:** QUICK WIN!
 
 ## Application Icon
 
@@ -219,7 +224,7 @@ Design and deploy an appropriate app icon set to replace the Wails icons current
 **Cost/Benefit:**
 - **Cost:** < ... >
 - **Benefit:** < ... >
-- **Priority:** < ... >
+- **Priority:** QUICK WIN!
 
 ## Continuous Operations
 
@@ -346,7 +351,7 @@ The current MCP ecosystem suffers from an adoption problem, not a technology pro
 - **Cost:** < ... >
 - **Benefit:** < ... >
 - **Priority:** < ... >
----
 
+---
 *Last Updated: 2025-11-14*
 *Status: Deferred pending real-world usage data*
