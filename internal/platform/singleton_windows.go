@@ -46,8 +46,8 @@ func (w *WindowsSingleInstance) Acquire() (bool, error) {
 
 	// Try to create the mutex
 	ret, _, err := procCreateMutex.Call(
-		0,                          // lpMutexAttributes (NULL)
-		0,                          // bInitialOwner (FALSE)
+		0,                                     // lpMutexAttributes (NULL)
+		0,                                     // bInitialOwner (FALSE)
 		uintptr(unsafe.Pointer(mutexNamePtr)), // lpName
 	)
 

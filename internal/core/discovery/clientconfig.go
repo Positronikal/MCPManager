@@ -33,10 +33,10 @@ type ClientConfig struct {
 
 // ServerConfig represents a single server configuration
 type ServerConfig struct {
-	Command string                 `json:"command"`
-	Args    []string               `json:"args,omitempty"`
-	Env     map[string]string      `json:"env,omitempty"`
-	Enabled *bool                  `json:"enabled,omitempty"`
+	Command  string                 `json:"command"`
+	Args     []string               `json:"args,omitempty"`
+	Env      map[string]string      `json:"env,omitempty"`
+	Enabled  *bool                  `json:"enabled,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 

@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"github.com/Positronikal/MCPManager/internal/core/discovery"
 	"github.com/Positronikal/MCPManager/internal/models"
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 // DiscoveryHandlers contains HTTP handlers for discovery endpoints

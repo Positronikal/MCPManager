@@ -374,23 +374,6 @@ func (ds *DiscoveryService) processMatchesServer(proc *ProcessInfo, server *mode
 	return false
 }
 
-// containsServerName checks if the text contains the server name as a distinct token
-func containsServerName(text, serverName string) bool {
-	// Simple token-based matching to avoid false positives
-	// This prevents "mcp" from matching "mcpmanager"
-	return text == serverName ||
-	       containsToken(text, serverName) ||
-	       containsToken(text, "@"+serverName) // npm scoped packages
-}
-
-// containsToken checks if text contains token as a separate word
-func containsToken(text, token string) bool {
-	// TODO: Implement proper token matching
-	// For now, use simple contains check but this should be improved
-	// to avoid false positives
-	return false
-}
-
 // GetCachedServers returns the cached list of discovered servers
 func (ds *DiscoveryService) GetCachedServers() []models.MCPServer {
 	ds.mu.RLock()

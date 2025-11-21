@@ -3,8 +3,8 @@ package discovery
 import (
 	"path/filepath"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/Positronikal/MCPManager/internal/core/events"
+	"github.com/fsnotify/fsnotify"
 )
 
 // ConfigFileWatcher monitors client config files for changes

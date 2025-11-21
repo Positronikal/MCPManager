@@ -15,14 +15,14 @@ import (
 
 // LifecycleService manages server lifecycle operations (start, stop, restart)
 type LifecycleService struct {
-	processManager   platform.ProcessManager
-	discoveryService DiscoveryService      // Interface for cache synchronization
-	monitoringService MonitoringService    // Interface for log capture
-	eventBus         *events.EventBus
-	mu               sync.RWMutex
-	monitors         map[string]chan struct{} // serverID -> stop channel for monitor
-	validatorStop    chan struct{}            // stop channel for PID validator
-	captureContexts  map[string]context.CancelFunc // serverID -> cancel function for output capture
+	processManager    platform.ProcessManager
+	discoveryService  DiscoveryService  // Interface for cache synchronization
+	monitoringService MonitoringService // Interface for log capture
+	eventBus          *events.EventBus
+	mu                sync.RWMutex
+	monitors          map[string]chan struct{}      // serverID -> stop channel for monitor
+	validatorStop     chan struct{}                 // stop channel for PID validator
+	captureContexts   map[string]context.CancelFunc // serverID -> cancel function for output capture
 }
 
 // DiscoveryService interface for cache updates (avoid circular dependency)

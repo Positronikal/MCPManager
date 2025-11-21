@@ -520,10 +520,10 @@ func TestCheckForUpdates_VersionParsing(t *testing.T) {
 	mockExec := NewMockCommandExecutor()
 
 	tests := []struct {
-		name            string
-		current         string
-		latest          string
-		shouldUpdate    bool
+		name         string
+		current      string
+		latest       string
+		shouldUpdate bool
 	}{
 		{"Patch update", "1.2.3", "1.2.4", true},
 		{"Minor update", "1.2.3", "1.3.0", true},

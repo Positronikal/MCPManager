@@ -87,7 +87,7 @@ func (ms *MonitoringService) parseSeverity(line string) models.LogSeverity {
 
 	// Check for error keywords first (highest priority)
 	if strings.Contains(lower, "error") || strings.Contains(lower, "fatal") ||
-	   strings.Contains(lower, "panic") || strings.Contains(lower, "exception") {
+		strings.Contains(lower, "panic") || strings.Contains(lower, "exception") {
 		return models.LogError
 	}
 
@@ -98,7 +98,7 @@ func (ms *MonitoringService) parseSeverity(line string) models.LogSeverity {
 
 	// Check for success keywords
 	if strings.Contains(lower, "success") || strings.Contains(lower, "successful") ||
-	   strings.Contains(lower, "completed") || strings.Contains(lower, "started") {
+		strings.Contains(lower, "completed") || strings.Contains(lower, "started") {
 		return models.LogSuccess
 	}
 

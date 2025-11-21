@@ -62,8 +62,8 @@ type ExtensionServer struct {
 
 // ExtensionMCPCfg represents the MCP configuration
 type ExtensionMCPCfg struct {
-	Command string   `json:"command"`
-	Args    []string `json:"args"`
+	Command string            `json:"command"`
+	Args    []string          `json:"args"`
 	Env     map[string]string `json:"env,omitempty"`
 }
 

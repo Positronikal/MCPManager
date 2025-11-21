@@ -234,36 +234,36 @@ func (fd *FilesystemDiscovery) discoverGoServers() ([]models.MCPServer, error) {
 // isMCPServerPackage determines if a package name is likely an MCP server
 // This uses conservative patterns to avoid false positives
 func isMCPServerPackage(name string) bool {
-      nameLower := strings.ToLower(name)
+	nameLower := strings.ToLower(name)
 
-      // Official MCP servers from @modelcontextprotocol scope
-      if strings.HasPrefix(nameLower, "@modelcontextprotocol/") ||
-              strings.HasPrefix(nameLower, "modelcontextprotocol") {
-              return true
-      }
+	// Official MCP servers from @modelcontextprotocol scope
+	if strings.HasPrefix(nameLower, "@modelcontextprotocol/") ||
+		strings.HasPrefix(nameLower, "modelcontextprotocol") {
+		return true
+	}
 
-      // Common MCP server naming patterns (but not just "mcp" alone)
-      // Use hyphens or underscores to avoid matching "mcpmanager"
-      if strings.Contains(nameLower, "mcp-server") ||
-              strings.Contains(nameLower, "mcp_server") ||
-              strings.Contains(nameLower, "-mcp-") ||
-              strings.Contains(nameLower, "_mcp_") {
-              return true
-      }
+	// Common MCP server naming patterns (but not just "mcp" alone)
+	// Use hyphens or underscores to avoid matching "mcpmanager"
+	if strings.Contains(nameLower, "mcp-server") ||
+		strings.Contains(nameLower, "mcp_server") ||
+		strings.Contains(nameLower, "-mcp-") ||
+		strings.Contains(nameLower, "_mcp_") {
+		return true
+	}
 
-      // Specific known MCP servers (add more as discovered)
-      knownServers := []string{
-              "figma-mcp",
-              "windows-mcp",
-              "slack-mcp",
-              "github-mcp",
-      }
+	// Specific known MCP servers (add more as discovered)
+	knownServers := []string{
+		"figma-mcp",
+		"windows-mcp",
+		"slack-mcp",
+		"github-mcp",
+	}
 
-      for _, known := range knownServers {
-              if strings.Contains(nameLower, known) {
-                      return true
-              }
-      }
+	for _, known := range knownServers {
+		if strings.Contains(nameLower, known) {
+			return true
+		}
+	}
 
-      return false
+	return false
 }

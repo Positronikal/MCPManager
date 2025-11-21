@@ -187,13 +187,41 @@ wails build -clean -production -ldflags "-s -w" -upx
    - Remove unused dependencies
    - Use tree-shaking
 
-## Continuous Deployment
+## Quality Verification
 
-The CI/CD pipeline (`.github/workflows/ci.yml`) automatically builds for all platforms on:
-- Push to `main` branch
-- Release tags (`v*`)
+Before creating release builds, run local verification to ensure all quality gates pass:
 
-Artifacts are uploaded and available for download from the Actions tab.
+**Unix/macOS/Linux:**
+```bash
+./scripts/verify-build.sh
+```
+
+**Windows:**
+```bash
+scripts\verify-build.bat
+```
+
+This runs the same quality gates as the previous CI pipeline:
+- Backend unit, integration, and contract tests
+- Go formatting, vet, and staticcheck linting
+- Frontend TypeScript checking and tests
+- Full Wails build verification
+
+See [USING.md](../USING.md) for verification workflow details.
+
+## Multi-Platform Builds
+
+To create release builds for all platforms, you'll need access to each target platform:
+
+1. **Windows builds** must be built on Windows (or cross-compiled with appropriate toolchain)
+2. **macOS builds** must be built on macOS (code signing and notarization requirements)
+3. **Linux builds** can be built on Linux or cross-compiled
+
+For each platform:
+1. Ensure all prerequisites are installed (see Prerequisites section above)
+2. Run verification: `./scripts/verify-build.sh` or `scripts\verify-build.bat`
+3. Build for production: `wails build -clean -production`
+4. Package the build artifacts (see Platform-Specific Builds section above)
 
 ## Version Management
 
@@ -283,4 +311,4 @@ go test ./tests/performance -v
 For build issues, see:
 - Wails Documentation: https://wails.io
 - Project Issues: GitHub Issues
-- Build logs: `.github/workflows/ci.yml` runs
+- Local verification: Run `./scripts/verify-build.sh` or `scripts\verify-build.bat` for detailed error output

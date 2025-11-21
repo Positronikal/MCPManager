@@ -90,11 +90,11 @@ func TestFilesystemDiscovery_NPMServerPattern(t *testing.T) {
 // Helper function to check if name contains "mcp"
 func containsMCP(name string) bool {
 	return len(name) > 0 && (name[0:1] == "m" || name[0:1] == "M") &&
-		   len(name) > 2 && (name[0:3] == "mcp" || name[0:3] == "MCP" ||
-		   name[0:3] == "Mcp" || name[0:3] == "mCp" || name[0:3] == "mcP" ||
-		   name[0:3] == "McP" || name[0:3] == "MCp" || name[0:3] == "mCP") ||
-		   (len(name) > 2 && (name[0:3] == "mcp" || name[0:3] == "MCP")) ||
-		   (len(name) > 3 && containsSubstring(name, "mcp"))
+		len(name) > 2 && (name[0:3] == "mcp" || name[0:3] == "MCP" ||
+		name[0:3] == "Mcp" || name[0:3] == "mCp" || name[0:3] == "mcP" ||
+		name[0:3] == "McP" || name[0:3] == "MCp" || name[0:3] == "mCP") ||
+		(len(name) > 2 && (name[0:3] == "mcp" || name[0:3] == "MCP")) ||
+		(len(name) > 3 && containsSubstring(name, "mcp"))
 }
 
 func containsSubstring(s, substr string) bool {

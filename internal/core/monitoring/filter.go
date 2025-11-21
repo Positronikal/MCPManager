@@ -15,10 +15,10 @@ const (
 
 // LogFilter represents filtering criteria for logs
 type LogFilter struct {
-	ServerID *string               // Filter by specific server ID (nil = all servers)
-	Severity *models.LogSeverity   // Filter by severity level (nil = all severities)
-	Search   string                // Full-text search in message (case-insensitive)
-	Limit    int                   // Maximum number of results (0 = use default)
+	ServerID *string             // Filter by specific server ID (nil = all servers)
+	Severity *models.LogSeverity // Filter by severity level (nil = all severities)
+	Search   string              // Full-text search in message (case-insensitive)
+	Limit    int                 // Maximum number of results (0 = use default)
 }
 
 // NewLogFilter creates a new log filter with default values

@@ -11,11 +11,11 @@ import (
 type EventType string
 
 const (
-	EventServerDiscovered      EventType = "server.discovered"
-	EventServerStatusChanged   EventType = "server.status.changed"
-	EventServerLogEntry        EventType = "server.log.entry"
-	EventConfigFileChanged     EventType = "config.file.changed"
-	EventServerMetricsUpdated  EventType = "server.metrics.updated"
+	EventServerDiscovered     EventType = "server.discovered"
+	EventServerStatusChanged  EventType = "server.status.changed"
+	EventServerLogEntry       EventType = "server.log.entry"
+	EventConfigFileChanged    EventType = "config.file.changed"
+	EventServerMetricsUpdated EventType = "server.metrics.updated"
 )
 
 // Event represents a generic event in the system

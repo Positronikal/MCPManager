@@ -8,8 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/Positronikal/MCPManager/internal/api"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -145,14 +145,14 @@ func TestPutServerConfiguration_ContractValidation(t *testing.T) {
 
 		// Valid ServerConfiguration (actual implementation)
 		configUpdate := map[string]interface{}{
-			"commandLineArguments":  []string{"server.js"},
-			"environmentVariables":  map[string]string{"NODE_ENV": "production"},
-			"autoStart":             true,
-			"restartOnCrash":        true,
-			"maxRestartAttempts":    3,
-			"startupTimeout":        30,
-			"shutdownTimeout":       10,
-			"healthCheckInterval":   5,
+			"commandLineArguments": []string{"server.js"},
+			"environmentVariables": map[string]string{"NODE_ENV": "production"},
+			"autoStart":            true,
+			"restartOnCrash":       true,
+			"maxRestartAttempts":   3,
+			"startupTimeout":       30,
+			"shutdownTimeout":      10,
+			"healthCheckInterval":  5,
 		}
 		bodyBytes, _ := json.Marshal(configUpdate)
 

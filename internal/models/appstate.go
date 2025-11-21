@@ -36,14 +36,14 @@ type Filters struct {
 
 // ApplicationState represents the complete application state
 type ApplicationState struct {
-	Version              string           `json:"version"`
-	LastSaved            time.Time        `json:"lastSaved"`
-	Preferences          UserPreferences  `json:"preferences"`
-	WindowLayout         WindowLayout     `json:"windowLayout"`
-	Filters              Filters          `json:"filters"`
-	DiscoveredServers    []string         `json:"discoveredServers"` // List of server IDs
-	MonitoredConfigPaths []string         `json:"monitoredConfigPaths"`
-	LastDiscoveryScan    time.Time        `json:"lastDiscoveryScan"`
+	Version              string          `json:"version"`
+	LastSaved            time.Time       `json:"lastSaved"`
+	Preferences          UserPreferences `json:"preferences"`
+	WindowLayout         WindowLayout    `json:"windowLayout"`
+	Filters              Filters         `json:"filters"`
+	DiscoveredServers    []string        `json:"discoveredServers"` // List of server IDs
+	MonitoredConfigPaths []string        `json:"monitoredConfigPaths"`
+	LastDiscoveryScan    time.Time       `json:"lastDiscoveryScan"`
 }
 
 // NewApplicationState creates a new ApplicationState with default values

@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package discovery
@@ -90,7 +91,6 @@ var (
 	procCreateToolhelp32Snapshot  = modKernel32.NewProc("CreateToolhelp32Snapshot")
 	procProcess32First            = modKernel32.NewProc("Process32FirstW")
 	procProcess32Next             = modKernel32.NewProc("Process32NextW")
-	procEnumProcesses             = modPsapi.NewProc("EnumProcesses")
 	procGetModuleFileNameEx       = modPsapi.NewProc("GetModuleFileNameExW")
 )
 
@@ -310,72 +310,6 @@ func readProcessMemory(handle windows.Handle, baseAddress uintptr, buffer unsafe
 	}
 
 	return nil
-}
-
-// findClaudeDesktopChildren finds all child processes of Claude Desktop
-func findClaudeDesktopChildren() ([]uint32, error) {
-	// First, find Claude.exe PID
-	snapshot, err := createProcessSnapshot()
-	if err != nil {
-		return nil, err
-	}
-	defer windows.CloseHandle(windows.Handle(snapshot))
-
-	var claudePID uint32
-	var pe PROCESSENTRY32
-	pe.Size = uint32(unsafe.Sizeof(pe))
-
-	ret, _, _ := procProcess32First.Call(uintptr(snapshot), uintptr(unsafe.Pointer(&pe)))
-	if ret == 0 {
-		return nil, fmt.Errorf("Process32First failed")
-	}
-
-	// Find Claude.exe
-	for {
-		exeName := windows.UTF16ToString(pe.ExeFile[:])
-		if toLower(exeName) == "claude.exe" {
-			claudePID = pe.ProcessID
-			break
-		}
-
-		ret, _, _ = procProcess32Next.Call(uintptr(snapshot), uintptr(unsafe.Pointer(&pe)))
-		if ret == 0 {
-			break
-		}
-	}
-
-	if claudePID == 0 {
-		return nil, fmt.Errorf("Claude.exe not found")
-	}
-
-	// Now find all children of Claude.exe
-	var children []uint32
-
-	// Reset snapshot
-	snapshot2, err := createProcessSnapshot()
-	if err != nil {
-		return nil, err
-	}
-	defer windows.CloseHandle(windows.Handle(snapshot2))
-
-	pe.Size = uint32(unsafe.Sizeof(pe))
-	ret, _, _ = procProcess32First.Call(uintptr(snapshot2), uintptr(unsafe.Pointer(&pe)))
-	if ret == 0 {
-		return nil, fmt.Errorf("Process32First failed")
-	}
-
-	for {
-		if pe.ParentProcessID == claudePID {
-			children = append(children, pe.ProcessID)
-		}
-
-		ret, _, _ = procProcess32Next.Call(uintptr(snapshot2), uintptr(unsafe.Pointer(&pe)))
-		if ret == 0 {
-			break
-		}
-	}
-
-	return children, nil
 }
 
 // toLower is a simple ASCII lowercase function to avoid string imports

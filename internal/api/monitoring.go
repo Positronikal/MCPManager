@@ -5,12 +5,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"github.com/Positronikal/MCPManager/internal/core/discovery"
 	"github.com/Positronikal/MCPManager/internal/core/monitoring"
 	"github.com/Positronikal/MCPManager/internal/models"
 	"github.com/Positronikal/MCPManager/internal/platform"
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 // MonitoringHandlers contains HTTP handlers for monitoring endpoints
@@ -44,10 +44,10 @@ type AllLogsResponse struct {
 
 // MetricsResponse is the response structure for GET /servers/{serverId}/metrics
 type MetricsResponse struct {
-	UptimeSeconds  *int     `json:"uptimeSeconds"`
-	MemoryUsageMB  *float64 `json:"memoryUsageMB"`
-	RequestCount   *int64   `json:"requestCount"`
-	CPUPercent     *float64 `json:"cpuPercent"`
+	UptimeSeconds *int     `json:"uptimeSeconds"`
+	MemoryUsageMB *float64 `json:"memoryUsageMB"`
+	RequestCount  *int64   `json:"requestCount"`
+	CPUPercent    *float64 `json:"cpuPercent"`
 }
 
 // GetServerLogs handles GET /api/v1/servers/{serverId}/logs
@@ -235,10 +235,10 @@ func (h *MonitoringHandlers) GetServerMetrics(w http.ResponseWriter, r *http.Req
 
 	// Build response with nullable fields
 	response := MetricsResponse{
-		UptimeSeconds:  nil,
-		MemoryUsageMB:  nil,
-		RequestCount:   nil,
-		CPUPercent:     nil,
+		UptimeSeconds: nil,
+		MemoryUsageMB: nil,
+		RequestCount:  nil,
+		CPUPercent:    nil,
 	}
 
 	// Convert uptime to seconds (nullable)

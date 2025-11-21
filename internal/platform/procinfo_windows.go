@@ -18,11 +18,11 @@ func NewProcessInfo() ProcessInfo {
 
 // Windows API structures and constants
 var (
-	kernel32                   = syscall.NewLazyDLL("kernel32.dll")
-	psapi                      = syscall.NewLazyDLL("psapi.dll")
-	procOpenProcess            = kernel32.NewProc("OpenProcess")
-	procCloseHandle            = kernel32.NewProc("CloseHandle")
-	procGetProcessMemoryInfo   = psapi.NewProc("GetProcessMemoryInfo")
+	kernel32                 = syscall.NewLazyDLL("kernel32.dll")
+	psapi                    = syscall.NewLazyDLL("psapi.dll")
+	procOpenProcess          = kernel32.NewProc("OpenProcess")
+	procCloseHandle          = kernel32.NewProc("CloseHandle")
+	procGetProcessMemoryInfo = psapi.NewProc("GetProcessMemoryInfo")
 )
 
 const (

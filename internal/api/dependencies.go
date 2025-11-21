@@ -3,11 +3,11 @@ package api
 import (
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"github.com/Positronikal/MCPManager/internal/core/dependencies"
 	"github.com/Positronikal/MCPManager/internal/core/discovery"
 	"github.com/Positronikal/MCPManager/internal/models"
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 // DependencyHandlers contains HTTP handlers for dependency endpoints

@@ -29,7 +29,13 @@
       "Read(//c/Users/hoyth/AppData/Roaming/Claude/Claude Extensions/**)",
       "Bash(cat:*)",
       "Bash(tree:*)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(go fmt:*)",
+      "Bash(gofmt:*)",
+      "Bash(staticcheck:*)",
+      "Bash(./scripts/verify-build.sh:*)",
+      "Bash(cmd /c \"scripts\\verify-build.bat --help\")",
+      "Bash(scripts/verify-build.bat:*)"
     ],
     "deny": [],
     "ask": []

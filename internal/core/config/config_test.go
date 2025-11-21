@@ -412,9 +412,9 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	config.HealthCheckInterval = 30
 	config.HealthCheckEndpoint = "http://localhost:8080/health"
 	config.EnvironmentVariables = map[string]string{
-		"NODE_ENV":   "production",
-		"LOG_LEVEL":  "debug",
-		"API_KEY":    "secret123",
+		"NODE_ENV":  "production",
+		"LOG_LEVEL": "debug",
+		"API_KEY":   "secret123",
 	}
 	config.CommandLineArguments = []string{"--verbose", "--port", "8080"}
 	config.WorkingDirectory = workDir // Use temp dir as working directory

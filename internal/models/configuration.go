@@ -8,16 +8,16 @@ import (
 
 // ServerConfiguration contains the configuration for launching and managing an MCP server
 type ServerConfiguration struct {
-	EnvironmentVariables  map[string]string `json:"environmentVariables,omitempty"`
-	CommandLineArguments  []string          `json:"commandLineArguments,omitempty"`
-	WorkingDirectory      string            `json:"workingDirectory,omitempty"`
-	AutoStart             bool              `json:"autoStart"`
-	RestartOnCrash        bool              `json:"restartOnCrash"`
-	MaxRestartAttempts    int               `json:"maxRestartAttempts"`
-	StartupTimeout        int               `json:"startupTimeout"` // seconds
-	ShutdownTimeout       int               `json:"shutdownTimeout"` // seconds
-	HealthCheckInterval   int               `json:"healthCheckInterval,omitempty"` // seconds
-	HealthCheckEndpoint   string            `json:"healthCheckEndpoint,omitempty"`
+	EnvironmentVariables map[string]string `json:"environmentVariables,omitempty"`
+	CommandLineArguments []string          `json:"commandLineArguments,omitempty"`
+	WorkingDirectory     string            `json:"workingDirectory,omitempty"`
+	AutoStart            bool              `json:"autoStart"`
+	RestartOnCrash       bool              `json:"restartOnCrash"`
+	MaxRestartAttempts   int               `json:"maxRestartAttempts"`
+	StartupTimeout       int               `json:"startupTimeout"`                // seconds
+	ShutdownTimeout      int               `json:"shutdownTimeout"`               // seconds
+	HealthCheckInterval  int               `json:"healthCheckInterval,omitempty"` // seconds
+	HealthCheckEndpoint  string            `json:"healthCheckEndpoint,omitempty"`
 }
 
 // envVarRegex matches valid environment variable names (uppercase letters, digits, underscores)

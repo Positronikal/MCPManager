@@ -1,7 +1,6 @@
 package api
 
 import (
-	"github.com/go-chi/chi/v5"
 	"github.com/Positronikal/MCPManager/internal/core/config"
 	"github.com/Positronikal/MCPManager/internal/core/dependencies"
 	"github.com/Positronikal/MCPManager/internal/core/discovery"
@@ -9,6 +8,7 @@ import (
 	"github.com/Positronikal/MCPManager/internal/core/lifecycle"
 	"github.com/Positronikal/MCPManager/internal/core/monitoring"
 	"github.com/Positronikal/MCPManager/internal/storage"
+	"github.com/go-chi/chi/v5"
 )
 
 // Services contains all application services

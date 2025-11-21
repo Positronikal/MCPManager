@@ -51,7 +51,7 @@ func (ds *DependencyService) CheckDependencies(server *models.MCPServer) ([]mode
 		return nil, fmt.Errorf("server cannot be nil")
 	}
 
-	if server.Dependencies == nil || len(server.Dependencies) == 0 {
+	if len(server.Dependencies) == 0 {
 		return []models.Dependency{}, nil
 	}
 
@@ -218,10 +218,10 @@ func (ds *DependencyService) checkLibrary(dep *models.Dependency) {
 func (ds *DependencyService) extractVersion(output string) string {
 	// Common version patterns
 	patterns := []string{
-		`v?(\d+\.\d+\.\d+[-\w\.]*)`,     // v1.2.3 or 1.2.3
-		`version\s+v?(\d+\.\d+\.\d+)`,   // "version 1.2.3"
-		`(\d+\.\d+\.\d+)`,                // plain 1.2.3
-		`v?(\d+\.\d+)`,                   // v1.2 or 1.2
+		`v?(\d+\.\d+\.\d+[-\w\.]*)`,   // v1.2.3 or 1.2.3
+		`version\s+v?(\d+\.\d+\.\d+)`, // "version 1.2.3"
+		`(\d+\.\d+\.\d+)`,             // plain 1.2.3
+		`v?(\d+\.\d+)`,                // v1.2 or 1.2
 	}
 
 	for _, pattern := range patterns {

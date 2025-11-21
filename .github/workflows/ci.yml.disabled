@@ -1,3 +1,36 @@
+# ============================================================================
+# DISABLED: This workflow is not currently active
+# ============================================================================
+#
+# REASON FOR DISABLING:
+# After 14+ workflow failures due to GitHub Actions platform quirks (path
+# issues, environment inconsistencies, runner-specific failures), we moved
+# to local verification scripts that provide the same quality gates without
+# the friction of remote CI.
+#
+# REPLACEMENT:
+# Quality verification is now performed locally via:
+#   - scripts/verify-build.sh (Linux/macOS)
+#   - scripts/verify-build.bat (Windows)
+#
+# These scripts run the same tests, builds, and lints as this CI workflow
+# but execute in the developer's actual environment, providing:
+#   - Immediate feedback (seconds vs minutes)
+#   - Identical test environment (no "works locally" surprises)
+#   - No dependency on GitHub infrastructure
+#   - Easier debugging when issues occur
+#
+# WHEN TO RE-ENABLE:
+# Consider re-enabling if:
+#   - Project accepts external contributions requiring PR validation
+#   - Automated release builds with cross-platform binaries are needed
+#   - Team size grows beyond solo/small team maintenance
+#
+# See README.md, USING.md, or docs/PACKAGING.md for local verification usage.
+# ============================================================================
+
+# Original workflow definition preserved below for reference:
+
 name: CI
 
 on:

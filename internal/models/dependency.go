@@ -9,11 +9,11 @@ import (
 
 // Dependency represents a dependency required by an MCP server
 type Dependency struct {
-	Name                    string         `json:"name"`
-	Type                    DependencyType `json:"type"`
-	RequiredVersion         string         `json:"requiredVersion,omitempty"`
-	DetectedVersion         string         `json:"detectedVersion,omitempty"`
-	InstallationInstructions string        `json:"installationInstructions,omitempty"` // Markdown format
+	Name                     string         `json:"name"`
+	Type                     DependencyType `json:"type"`
+	RequiredVersion          string         `json:"requiredVersion,omitempty"`
+	DetectedVersion          string         `json:"detectedVersion,omitempty"`
+	InstallationInstructions string         `json:"installationInstructions,omitempty"` // Markdown format
 }
 
 // IsInstalled checks if the dependency is installed and satisfies the version requirement

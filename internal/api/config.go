@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"github.com/Positronikal/MCPManager/internal/core/config"
 	"github.com/Positronikal/MCPManager/internal/core/discovery"
 	"github.com/Positronikal/MCPManager/internal/models"
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 // ConfigHandlers contains HTTP handlers for configuration endpoints

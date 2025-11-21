@@ -70,6 +70,32 @@ MCP Manager will automatically discover your installed MCP servers on first laun
 
 **For detailed installation and usage**, see [USING.md](./USING.md).
 
+## Development Verification
+
+Before committing changes, run local verification to ensure code quality:
+
+```bash
+# Unix/macOS/Linux
+./scripts/verify-build.sh
+
+# Windows
+scripts\verify-build.bat
+
+# Quick check (faster, skips race detection and integration tests)
+./scripts/verify-build.sh --quick
+
+# Skip the full Wails build (faster for iterative development)
+./scripts/verify-build.sh --skip-build
+```
+
+These scripts replace GitHub Actions CI and run the same quality gates locally:
+- Backend unit, integration, and contract tests
+- Go formatting, vet, and staticcheck linting
+- Frontend TypeScript checking and tests
+- Build verification
+
+See [USING.md](./USING.md) for more details on the verification workflow.
+
 ## Project Status
 
 - ✅ **Core Features**: Complete (98/98 specification tasks)

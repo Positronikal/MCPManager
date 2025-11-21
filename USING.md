@@ -147,6 +147,80 @@ npm run format
 npm run lint
 ```
 
+### Pre-Commit Verification
+
+Before committing or pushing changes, run the local verification script to ensure all quality gates pass:
+
+**Unix/macOS/Linux:**
+```bash
+./scripts/verify-build.sh
+```
+
+**Windows:**
+```bash
+scripts\verify-build.bat
+```
+
+**Verification Modes:**
+
+```bash
+# Full verification (recommended before pushing)
+./scripts/verify-build.sh
+
+# Quick mode - faster, skips race detection and integration tests
+./scripts/verify-build.sh --quick
+
+# Skip Wails build - useful for iterative development
+./scripts/verify-build.sh --skip-build
+
+# Skip performance benchmarks
+./scripts/verify-build.sh --skip-perf
+
+# Combine options
+./scripts/verify-build.sh --quick --skip-build
+```
+
+**What Gets Verified:**
+- ✅ Go formatting (`go fmt`)
+- ✅ Static analysis (`go vet`, `staticcheck`)
+- ✅ Backend unit tests (with race detection in full mode)
+- ✅ Backend integration tests (full mode only)
+- ✅ Backend contract tests
+- ✅ Performance benchmarks (full mode only, unless `--skip-perf`)
+- ✅ Frontend TypeScript type checking
+- ✅ Frontend tests
+- ✅ Frontend build
+- ✅ Full Wails build (unless `--skip-build`)
+
+**Recommended Workflow:**
+1. During development: `./scripts/verify-build.sh --quick --skip-build`
+2. Before committing: `./scripts/verify-build.sh --skip-build`
+3. Before pushing: `./scripts/verify-build.sh` (full verification)
+
+**Why Local Verification?**
+- Immediate feedback (seconds vs minutes)
+- Works in your actual development environment
+- No dependency on GitHub infrastructure
+- Easier debugging when issues occur
+- Same quality gates as previously enforced by CI
+
+**Optional: Git Hook Installation**
+
+To automatically run verification before commits, create `.git/hooks/pre-commit`:
+
+```bash
+#!/bin/sh
+echo "Running pre-commit verification..."
+./scripts/verify-build.sh --quick --skip-build
+```
+
+Then make it executable:
+```bash
+chmod +x .git/hooks/pre-commit
+```
+
+Note: This is optional. You can run verification manually when desired.
+
 ### Debugging
 
 **Development Mode Logs:**
@@ -217,7 +291,7 @@ Frontend (Svelte) ←→ Wails IPC Bridge ←→ Go Backend
    - `*_darwin.go`
    - `*_linux.go`
 3. **Use build tags** if needed (e.g., `//go:build windows`)
-4. **Test on all platforms** via CI/CD or manual testing
+4. **Test on all platforms** via local verification scripts or manual testing
 
 ## Troubleshooting
 

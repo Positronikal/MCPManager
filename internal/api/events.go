@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/Positronikal/MCPManager/internal/core/events"
+	"github.com/google/uuid"
 )
 
 // SSEHandlers contains HTTP handlers for Server-Sent Events

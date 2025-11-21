@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"github.com/Positronikal/MCPManager/internal/core/discovery"
 	"github.com/Positronikal/MCPManager/internal/core/lifecycle"
 	"github.com/Positronikal/MCPManager/internal/models"
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 // LifecycleHandlers contains HTTP handlers for lifecycle endpoints
@@ -119,8 +119,8 @@ func (h *LifecycleHandlers) StopServer(w http.ResponseWriter, r *http.Request) {
 
 	// Parse request body (optional parameters)
 	var req StopServerRequest
-	req.Force = false   // Default
-	req.Timeout = 10    // Default
+	req.Force = false // Default
+	req.Timeout = 10  // Default
 
 	if r.Body != nil {
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
