@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/Positronikal/MCPManager/internal/core/config"
@@ -705,19 +707,65 @@ type OpenExplorerResponse struct {
 	Message string `json:"message"`
 }
 
-// OpenExplorer opens the file explorer at the specified path
-func (a *App) OpenExplorer(path string) (*OpenExplorerResponse, error) {
-	slog.Info("OpenExplorer called", "path", path)
+// OpenExplorer opens the file explorer at the server's installation directory
+func (a *App) OpenExplorer(serverID string) (*OpenExplorerResponse, error) {
+	slog.Info("OpenExplorer called", "serverId", serverID)
 
-	if path == "" {
+	// Validate serverID is not empty
+	if serverID == "" {
 		return &OpenExplorerResponse{
 			Success: false,
-			Message: "Path cannot be empty",
+			Message: "Server ID cannot be empty",
 		}, nil
 	}
 
-	// Use platform-specific command to open file explorer
-	err := platform.OpenFileExplorer(path)
+	// Get server by ID from discovery service
+	server, exists := a.discoveryService.GetServerByID(serverID)
+	if !exists {
+		return &OpenExplorerResponse{
+			Success: false,
+			Message: fmt.Sprintf("Server not found: %s", serverID),
+		}, nil
+	}
+
+	// Determine the directory path to open
+	directoryPath := ""
+
+	// For extension-sourced servers, use the __EXTENSION_PATH__ environment variable
+	if server.Source == models.DiscoveryExtension {
+		if extPath, ok := server.Configuration.EnvironmentVariables["__EXTENSION_PATH__"]; ok && extPath != "" {
+			directoryPath = extPath
+		}
+	}
+
+	// Fall back to InstallationPath if no extension path found
+	if directoryPath == "" {
+		directoryPath = server.InstallationPath
+	}
+
+	// If InstallationPath is a file (not directory), try to extract directory from args
+	fileInfo, statErr := os.Stat(directoryPath)
+	if statErr == nil && !fileInfo.IsDir() {
+		// InstallationPath is a file - check for --directory flag in arguments
+		dirFromArgs := extractDirectoryFromArgs(server.Configuration.CommandLineArguments)
+		if dirFromArgs != "" {
+			directoryPath = dirFromArgs
+		} else {
+			// No --directory flag found, use the file's parent directory
+			directoryPath = filepath.Dir(directoryPath)
+		}
+	}
+
+	// Validate directory path exists and is not empty
+	if directoryPath == "" {
+		return &OpenExplorerResponse{
+			Success: false,
+			Message: "Server installation path not available",
+		}, nil
+	}
+
+	// Use server's directory path
+	err := platform.OpenFileExplorer(directoryPath)
 	if err != nil {
 		return &OpenExplorerResponse{
 			Success: false,
@@ -754,4 +802,30 @@ func (a *App) LaunchShell() (*LaunchShellResponse, error) {
 		Success: true,
 		Message: "Shell launched successfully",
 	}, nil
+}
+
+// extractDirectoryFromArgs extracts the directory path from command line arguments
+// Looks for patterns like: --directory <path>, -d <path>, --dir <path>
+func extractDirectoryFromArgs(args []string) string {
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+
+		// Check for --directory, --dir, or -d flags
+		if arg == "--directory" || arg == "--dir" || arg == "-d" {
+			// Next argument should be the directory path
+			if i+1 < len(args) {
+				return args[i+1]
+			}
+		}
+
+		// Check for --directory=<path> format
+		if strings.HasPrefix(arg, "--directory=") {
+			return strings.TrimPrefix(arg, "--directory=")
+		}
+		if strings.HasPrefix(arg, "--dir=") {
+			return strings.TrimPrefix(arg, "--dir=")
+		}
+	}
+
+	return ""
 }

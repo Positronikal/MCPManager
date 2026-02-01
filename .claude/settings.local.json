@@ -35,7 +35,10 @@
       "Bash(staticcheck:*)",
       "Bash(./scripts/verify-build.sh:*)",
       "Bash(cmd /c \"scripts\\verify-build.bat --help\")",
-      "Bash(scripts/verify-build.bat:*)"
+      "Bash(scripts/verify-build.bat:*)",
+      "Bash(git show:*)",
+      "Bash(npm run check:*)",
+      "Bash(wails dev:*)"
     ],
     "deny": [],
     "ask": []
