@@ -19,21 +19,10 @@
     return true;
   });
 
-  async function openDirectory(path: string, serverName: string) {
+  async function openDirectory(serverId: string, serverName: string) {
     try {
-      // Extract directory from full path (remove filename)
-      let directory = path;
-
-      // If path ends with an executable or file, get its parent directory
-      if (path.match(/\.(exe|sh|py|js|ts)$/i)) {
-        const lastSlash = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
-        if (lastSlash > 0) {
-          directory = path.substring(0, lastSlash);
-        }
-      }
-
-      // Use backend API to open file explorer
-      const response = await OpenExplorer(directory);
+      // Use backend API to open file explorer (backend handles path resolution)
+      const response = await OpenExplorer(serverId);
       if (response.success) {
         addNotification('success', `Opened ${serverName} directory`);
       } else {
@@ -171,7 +160,7 @@
 
             <button
               class="btn-primary btn-block"
-              on:click={() => openDirectory(server.installationPath, server.name)}
+              on:click={() => openDirectory(server.id, server.name)}
             >
               📂 Open Directory
             </button>

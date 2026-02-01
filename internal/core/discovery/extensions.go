@@ -221,7 +221,8 @@ func (ced *ClaudeExtensionsDiscovery) createServerFromExtension(
 	command := manifest.Server.MCPConfig.Command
 	args := ced.resolveArgs(manifest.Server.MCPConfig.Args, extensionPath, settings)
 
-	// Create server with extension discovery source
+	// Create server with command as InstallationPath (for lifecycle to execute)
+	// Note: For extensions, the actual extension path is stored in __EXTENSION_PATH__ env var
 	server := models.NewMCPServer(serverName, command, models.DiscoveryExtension)
 
 	// Set version
