@@ -6,14 +6,18 @@
   let searchInput = ''; // Temporary input value for debouncing
   let searchTimeout: number | null = null;
   let selectedSource: string = '';
+  let selectedStatus: string = '';
 
-  // Filter servers by search and source
+  // Filter servers by search, source, and status
   $: displayedServers = $servers.filter(server => {
-    if (searchQuery && !server.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !server.installationPath.toLowerCase().includes(searchQuery.toLowerCase())) {
+    if (selectedSource && selectedSource !== '' && server.source !== selectedSource) {
       return false;
     }
-    if (selectedSource && selectedSource !== '' && server.source !== selectedSource) {
+    if (selectedStatus && selectedStatus !== '' && server.status.state !== selectedStatus) {
+      return false;
+    }
+    if (searchQuery && !server.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !server.installationPath.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
     return true;
@@ -75,7 +79,13 @@
         <option value="client_config">Client Config Files</option>
         <option value="extension">Claude Extensions</option>
         <option value="filesystem">Filesystem Scan</option>
-        <option value="process">Running Processes</option>
+      </select>
+      <select class="filter-select" bind:value={selectedStatus}>
+        <option value="">All Statuses</option>
+        <option value="running">Running</option>
+        <option value="stopped">Stopped</option>
+        <option value="starting">Starting</option>
+        <option value="error">Error</option>
       </select>
       <input
         type="search"
@@ -95,7 +105,7 @@
         <p class="text-secondary">
           {#if $servers.length === 0}
             Click "Refresh" to discover MCP servers.
-          {:else if searchQuery || selectedSource}
+          {:else if searchQuery || selectedSource || selectedStatus}
             No servers match your filters.
           {:else}
             No servers available.
