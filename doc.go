@@ -46,5 +46,4 @@
 //   - **Shutdown**: Stop servers → Close discovery (file watcher) → Close EventBus
 //
 // @author Positronikal
-// @version 1.0.0
 package main

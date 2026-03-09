@@ -12,7 +12,9 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
 )
 
-const appVersion = "0.1.0"
+// Set at build time via ldflags: -X main.appVersion=<version>
+// Defaults to "dev" for local development (wails dev)
+var appVersion = "dev"
 
 //go:embed all:frontend/dist
 var assets embed.FS

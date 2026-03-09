@@ -34,7 +34,7 @@ build_platform() {
 
     echo -e "${YELLOW}Building for ${platform}/${arch}...${NC}"
 
-    if wails build -clean -platform "${platform}/${arch}" -ldflags "-s -w" -o "${output_name}"; then
+    if wails build -clean -platform "${platform}/${arch}" -ldflags "-s -w -X main.appVersion=${VERSION}" -o "${output_name}"; then
         echo -e "${GREEN}✓ Build successful for ${platform}/${arch}${NC}"
         return 0
     else

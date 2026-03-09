@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { servers, filteredServers, serverFilters, addNotification } from '../stores/stores';
+  import { servers, addNotification } from '../stores/stores';
   import { OpenExplorer } from '../../wailsjs/go/main/App';
 
   let searchQuery = '';
@@ -122,8 +122,6 @@
                   ⚙️
                 {:else if server.source === 'filesystem'}
                   📂
-                {:else if server.source === 'process'}
-                  🔄
                 {:else}
                   🖥️
                 {/if}
@@ -328,11 +326,6 @@
   .badge-filesystem {
     background-color: rgba(76, 175, 80, 0.2);
     color: var(--status-running);
-  }
-
-  .badge-process {
-    background-color: rgba(255, 152, 0, 0.2);
-    color: var(--status-error);
   }
 
   .server-path {
