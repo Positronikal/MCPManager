@@ -35,7 +35,7 @@ func TestProcessDiscovery_DiscoverFromProcesses(t *testing.T) {
 
 	// If any servers found, verify they have correct source
 	for _, server := range servers {
-		if server.Source != models.DiscoveryProcess {
+		if server.Source != models.DiscoverySource("process") {
 			t.Errorf("Expected source to be process, got %s", server.Source)
 		}
 		if server.Status.State != models.StatusRunning {

@@ -11,41 +11,46 @@ describe('ServerTable Component', () => {
       id: 'server-1',
       name: 'Test Server 1',
       source: 'client_config',
+      transport: 'stdio',
       installationPath: '/path/to/server1',
       version: '1.0.0',
       status: {
         state: 'running',
-        pid: 12345,
-        port: 8080,
-        startedAt: new Date().toISOString(),
-        uptime: 3600,
-        lastChecked: new Date().toISOString(),
+        startupAttempts: 0,
+        lastStateChange: new Date().toISOString(),
+        crashRecoverable: true,
       },
       configuration: {
-        command: 'node',
-        args: ['server.js'],
-        env: {},
         autoStart: false,
-        restartOnFailure: false,
+        restartOnCrash: false,
+        maxRestartAttempts: 3,
+        startupTimeout: 30,
+        shutdownTimeout: 10,
       },
+      discoveredAt: new Date().toISOString(),
+      lastSeenAt: new Date().toISOString(),
     },
     {
       id: 'server-2',
       name: 'Test Server 2',
       source: 'filesystem',
+      transport: 'http',
       installationPath: '/path/to/server2',
       status: {
         state: 'stopped',
-        uptime: 0,
-        lastChecked: new Date().toISOString(),
+        startupAttempts: 0,
+        lastStateChange: new Date().toISOString(),
+        crashRecoverable: true,
       },
       configuration: {
-        command: 'python',
-        args: ['server.py'],
-        env: {},
         autoStart: false,
-        restartOnFailure: false,
+        restartOnCrash: false,
+        maxRestartAttempts: 3,
+        startupTimeout: 30,
+        shutdownTimeout: 10,
       },
+      discoveredAt: new Date().toISOString(),
+      lastSeenAt: new Date().toISOString(),
     },
   ];
 
@@ -53,6 +58,15 @@ describe('ServerTable Component', () => {
     vi.clearAllMocks();
     servers.set([]);
     applicationState.set({
+      version: '',
+      lastSaved: '',
+      preferences: {
+        theme: 'dark',
+        logRetentionPerServer: 1000,
+        autoStartServers: false,
+        minimizeToTray: false,
+        showNotifications: true,
+      },
       windowLayout: {
         width: 1024,
         height: 768,
@@ -61,16 +75,14 @@ describe('ServerTable Component', () => {
         maximized: false,
         logPanelHeight: 200,
       },
-      userPreferences: {
-        theme: 'dark',
-        autoRefresh: true,
-        refreshInterval: 30,
-      },
-      serverFilters: {
+      filters: {
+        status: undefined,
+        source: undefined,
         searchQuery: '',
-        selectedSource: null,
-        selectedStatus: null,
       },
+      discoveredServers: [],
+      monitoredConfigPaths: [],
+      lastDiscoveryScan: '',
       lastSyncedAt: new Date().toISOString(),
     });
   });

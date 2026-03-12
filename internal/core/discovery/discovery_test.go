@@ -55,7 +55,7 @@ func TestDiscoveryService_Deduplication(t *testing.T) {
 	// Create duplicate servers from different sources
 	server1 := models.NewMCPServer("test-server", "/path1", models.DiscoveryClientConfig)
 	server2 := models.NewMCPServer("test-server", "/path2", models.DiscoveryFilesystem)
-	server3 := models.NewMCPServer("test-server", "/path3", models.DiscoveryProcess)
+	server3 := models.NewMCPServer("test-server", "/path3", models.DiscoverySource("process"))
 
 	servers := []models.MCPServer{*server1, *server2, *server3}
 
@@ -92,7 +92,7 @@ func TestDiscoveryService_ProcessMatchingUpdatesPID(t *testing.T) {
 	server1 := models.NewMCPServer("test-server", "/path", models.DiscoveryClientConfig)
 
 	// Create a process discovery with PID
-	server2 := models.NewMCPServer("test-server", "/path", models.DiscoveryProcess)
+	server2 := models.NewMCPServer("test-server", "/path", models.DiscoverySource("process"))
 	server2.SetPID(1234)
 	server2.Status.State = models.StatusRunning
 
@@ -287,12 +287,12 @@ func TestDiscoveryService_PriorityOrder(t *testing.T) {
 		new            models.DiscoverySource
 		shouldReplace  bool
 	}{
-		{"filesystem replaces process", models.DiscoveryProcess, models.DiscoveryFilesystem, true},
+		{"filesystem replaces process", models.DiscoverySource("process"), models.DiscoveryFilesystem, true},
 		{"client_config replaces filesystem", models.DiscoveryFilesystem, models.DiscoveryClientConfig, true},
-		{"client_config replaces process", models.DiscoveryProcess, models.DiscoveryClientConfig, true},
-		{"process does not replace filesystem", models.DiscoveryFilesystem, models.DiscoveryProcess, false},
+		{"client_config replaces process", models.DiscoverySource("process"), models.DiscoveryClientConfig, true},
+		{"process does not replace filesystem", models.DiscoveryFilesystem, models.DiscoverySource("process"), false},
 		{"filesystem does not replace client_config", models.DiscoveryClientConfig, models.DiscoveryFilesystem, false},
-		{"process does not replace client_config", models.DiscoveryClientConfig, models.DiscoveryProcess, false},
+		{"process does not replace client_config", models.DiscoveryClientConfig, models.DiscoverySource("process"), false},
 	}
 
 	for _, tc := range testCases {

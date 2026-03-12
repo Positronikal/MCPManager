@@ -199,7 +199,6 @@ export class SSEClient {
           ...server.status,
           state: newState,
           lastStateChange: event.timestamp || new Date().toISOString(),
-          lastChecked: event.timestamp || new Date().toISOString(),
         };
 
         // Clear error message if transitioning out of error state
@@ -229,8 +228,10 @@ export class SSEClient {
     if (event.data && event.data.serverID) {
       const serverId = event.data.serverID;
       const logEntry: LogEntry = {
+        id: crypto.randomUUID(),
         timestamp: event.timestamp,
         severity: event.data.severity,
+        source: serverId,
         message: event.data.message,
         serverId: serverId
       };

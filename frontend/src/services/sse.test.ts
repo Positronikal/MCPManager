@@ -144,11 +144,12 @@ describe('SSE Client', () => {
         id: 'server-1',
         name: 'Test Server',
         installationPath: '/path/to/server',
+        transport: 'stdio',
         source: 'client_config',
         status: {
           state: 'stopped',
-          uptime: 0,
-          lastChecked: new Date().toISOString(),
+          startupAttempts: 0,
+          crashRecoverable: true,
           lastStateChange: new Date().toISOString(),
         },
         configuration: {

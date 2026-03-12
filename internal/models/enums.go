@@ -93,7 +93,6 @@ const (
 	DiscoveryClientConfig DiscoverySource = "client_config"
 	DiscoveryExtension    DiscoverySource = "extension"
 	DiscoveryFilesystem   DiscoverySource = "filesystem"
-	DiscoveryProcess      DiscoverySource = "process"
 )
 
 // ValidDiscoverySources contains all valid discovery sources
@@ -101,7 +100,6 @@ var ValidDiscoverySources = []DiscoverySource{
 	DiscoveryClientConfig,
 	DiscoveryExtension,
 	DiscoveryFilesystem,
-	DiscoveryProcess,
 }
 
 // IsValid validates if the discovery source is valid

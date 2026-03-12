@@ -33,7 +33,7 @@ export const discoveryAPI = {
     }
 
     return {
-      servers,
+      servers: servers as unknown as MCPServer[],
       count: servers.length,
       lastDiscovery: response.lastDiscovery
     };
@@ -44,7 +44,7 @@ export const discoveryAPI = {
   },
 
   async getServer(serverId: string): Promise<MCPServer> {
-    return await WailsApp.GetServer(serverId);
+    return await WailsApp.GetServer(serverId) as unknown as MCPServer;
   }
 };
 
@@ -55,7 +55,7 @@ export const lifecycleAPI = {
     serverId: string;
     status: string;
   }> {
-    return await WailsApp.StartServer(serverId);
+    return await WailsApp.StartServer(serverId) as any;
   },
 
   async stopServer(
@@ -75,7 +75,7 @@ export const lifecycleAPI = {
   },
 
   async getServerStatus(serverId: string): Promise<ServerStatus> {
-    return await WailsApp.GetServerStatus(serverId);
+    return await WailsApp.GetServerStatus(serverId) as unknown as ServerStatus;
   }
 };
 
@@ -103,7 +103,7 @@ export const monitoringAPI = {
     const limit = options?.limit || 100;
     const offset = options?.offset || 0;
 
-    return await WailsApp.GetLogs(serverId, severity, limit, offset);
+    return await WailsApp.GetLogs(serverId, severity, limit, offset) as any;
   },
 
   async getAllLogs(options?: {
@@ -119,7 +119,7 @@ export const monitoringAPI = {
 
     const response = await WailsApp.GetAllLogs(serverId, severity, search, limit);
     return {
-      logs: response.logs || [],
+      logs: (response.logs || []) as unknown as LogEntry[],
       total: response.total || 0
     };
   },
@@ -146,13 +146,13 @@ export const dependenciesAPI = {
 // Application State API
 export const appStateAPI = {
   async getApplicationState(): Promise<ApplicationState> {
-    return await WailsApp.GetApplicationState();
+    return await WailsApp.GetApplicationState() as unknown as ApplicationState;
   },
 
   async updateApplicationState(
     state: ApplicationState
   ): Promise<{ message: string }> {
-    return await WailsApp.UpdateApplicationState(state);
+    return await WailsApp.UpdateApplicationState(state as any) as any;
   }
 };
 

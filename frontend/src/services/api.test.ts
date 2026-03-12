@@ -104,8 +104,9 @@ describe('API Client', () => {
     it('should get server status', async () => {
       const mockStatus = {
         state: 'running',
-        pid: 12345,
-        port: 8080,
+        startupAttempts: 0,
+        lastStateChange: new Date().toISOString(),
+        crashRecoverable: true,
       };
 
       vi.mocked(AppBindings.GetServerStatus).mockResolvedValue(mockStatus as any);
@@ -113,7 +114,6 @@ describe('API Client', () => {
       const result = await api.lifecycle.getServerStatus('server-1');
       expect(AppBindings.GetServerStatus).toHaveBeenCalledWith('server-1');
       expect(result.state).toBe('running');
-      expect(result.pid).toBe(12345);
     });
   });
 
@@ -135,11 +135,11 @@ describe('API Client', () => {
 
     it('should update server configuration', async () => {
       const newConfig = {
-        command: 'python',
-        args: ['server.py'],
-        env: {},
         autoStart: false,
-        restartOnFailure: true,
+        restartOnCrash: true,
+        maxRestartAttempts: 3,
+        startupTimeout: 30,
+        shutdownTimeout: 10,
       };
 
       vi.mocked(AppBindings.UpdateConfiguration).mockResolvedValue(newConfig as any);
@@ -198,16 +198,17 @@ describe('API Client', () => {
 
     it('should get server metrics', async () => {
       const mockMetrics = {
-        cpu: 25.5,
-        memory: 128,
+        serverId: 'server-1',
         uptime: 3600,
+        memoryBytes: 134217728,
+        timestamp: new Date().toISOString(),
       };
 
       vi.mocked(AppBindings.GetMetrics).mockResolvedValue(mockMetrics as any);
 
       const result = await api.monitoring.getServerMetrics('server-1');
       expect(AppBindings.GetMetrics).toHaveBeenCalledWith('server-1');
-      expect(result.cpu).toBe(25.5);
+      expect(result.uptime).toBe(3600);
     });
   });
 
@@ -236,7 +237,7 @@ describe('API Client', () => {
 
     it('should get updates', async () => {
       const mockUpdates = {
-        available: true,
+        updateAvailable: true,
         latestVersion: '2.0.0',
         currentVersion: '1.0.0',
       };
@@ -245,7 +246,7 @@ describe('API Client', () => {
 
       const result = await api.dependencies.getUpdates('server-1');
       expect(AppBindings.GetUpdates).toHaveBeenCalledWith('server-1');
-      expect(result.available).toBe(true);
+      expect(result.updateAvailable).toBe(true);
     });
   });
 
@@ -271,6 +272,8 @@ describe('API Client', () => {
 
     it('should update application state', async () => {
       const newState = {
+        version: '',
+        lastSaved: '',
         windowLayout: {
           width: 1920,
           height: 1080,
@@ -279,20 +282,25 @@ describe('API Client', () => {
           maximized: true,
           logPanelHeight: 300,
         },
-        userPreferences: {
+        preferences: {
           theme: 'dark',
-          autoRefresh: true,
-          refreshInterval: 30,
+          logRetentionPerServer: 1000,
+          autoStartServers: false,
+          minimizeToTray: false,
+          showNotifications: true,
         },
-        serverFilters: {
+        filters: {
           searchQuery: '',
-          selectedSource: null,
-          selectedStatus: null,
+          status: undefined,
+          source: undefined,
         },
+        discoveredServers: [],
+        monitoredConfigPaths: [],
+        lastDiscoveryScan: '',
         lastSyncedAt: new Date().toISOString(),
       };
 
-      vi.mocked(AppBindings.UpdateApplicationState).mockResolvedValue(undefined);
+      vi.mocked(AppBindings.UpdateApplicationState).mockResolvedValue(undefined as any);
 
       await api.appState.updateApplicationState(newState);
       expect(AppBindings.UpdateApplicationState).toHaveBeenCalledWith(newState);

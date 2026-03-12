@@ -17,6 +17,36 @@ import {
   type LogEntry,
 } from './stores';
 
+const makeApplicationState = (overrides = {}) => ({
+  version: '',
+  lastSaved: '',
+  preferences: {
+    theme: 'dark',
+    logRetentionPerServer: 1000,
+    autoStartServers: false,
+    minimizeToTray: false,
+    showNotifications: true,
+  },
+  windowLayout: {
+    width: 1024,
+    height: 768,
+    x: 0,
+    y: 0,
+    maximized: false,
+    logPanelHeight: 200,
+  },
+  filters: {
+    status: undefined,
+    source: undefined,
+    searchQuery: '',
+  },
+  discoveredServers: [],
+  monitoredConfigPaths: [],
+  lastDiscoveryScan: '',
+  lastSyncedAt: new Date().toISOString(),
+  ...overrides,
+});
+
 describe('Stores', () => {
   beforeEach(() => {
     // Reset stores before each test
@@ -27,27 +57,7 @@ describe('Stores', () => {
     isConnected.set(false);
     isDiscovering.set(false);
     notifications.set([]);
-    applicationState.set({
-      windowLayout: {
-        width: 1024,
-        height: 768,
-        x: 0,
-        y: 0,
-        maximized: false,
-        logPanelHeight: 200,
-      },
-      userPreferences: {
-        theme: 'dark',
-        autoRefresh: true,
-        refreshInterval: 30,
-      },
-      serverFilters: {
-        searchQuery: '',
-        selectedSource: null,
-        selectedStatus: null,
-      },
-      lastSyncedAt: new Date().toISOString(),
-    });
+    applicationState.set(makeApplicationState());
   });
 
   describe('Basic stores', () => {
@@ -61,23 +71,24 @@ describe('Stores', () => {
           id: 'server-1',
           name: 'Test Server',
           source: 'client_config',
+          transport: 'stdio',
           installationPath: '/path/to/server',
           version: '1.0.0',
           status: {
             state: 'running',
-            pid: 12345,
-            port: 8080,
-            startedAt: new Date().toISOString(),
-            uptime: 100,
-            lastChecked: new Date().toISOString(),
+            startupAttempts: 0,
+            lastStateChange: new Date().toISOString(),
+            crashRecoverable: true,
           },
           configuration: {
-            command: 'node',
-            args: ['server.js'],
-            env: {},
             autoStart: false,
-            restartOnFailure: false,
+            restartOnCrash: false,
+            maxRestartAttempts: 3,
+            startupTimeout: 30,
+            shutdownTimeout: 10,
           },
+          discoveredAt: new Date().toISOString(),
+          lastSeenAt: new Date().toISOString(),
         },
       ];
       servers.set(mockServers);
@@ -87,7 +98,9 @@ describe('Stores', () => {
     it('should update logs', () => {
       const mockLogs: LogEntry[] = [
         {
+          id: 'log-1',
           serverId: 'server-1',
+          source: 'server-1',
           timestamp: new Date().toISOString(),
           severity: 'info',
           message: 'Test log message',
@@ -112,13 +125,17 @@ describe('Stores', () => {
     it('should filter logs by serverId', () => {
       logs.set([
         {
+          id: 'log-1',
           serverId: 'server-1',
+          source: 'server-1',
           timestamp: new Date().toISOString(),
           severity: 'info',
           message: 'Server 1 log',
         },
         {
+          id: 'log-2',
           serverId: 'server-2',
+          source: 'server-2',
           timestamp: new Date().toISOString(),
           severity: 'info',
           message: 'Server 2 log',
@@ -134,13 +151,17 @@ describe('Stores', () => {
     it('should filter logs by severity', () => {
       logs.set([
         {
+          id: 'log-1',
           serverId: 'server-1',
+          source: 'server-1',
           timestamp: new Date().toISOString(),
           severity: 'info',
           message: 'Info log',
         },
         {
+          id: 'log-2',
           serverId: 'server-1',
+          source: 'server-1',
           timestamp: new Date().toISOString(),
           severity: 'error',
           message: 'Error log',
@@ -156,13 +177,17 @@ describe('Stores', () => {
     it('should filter logs by search query', () => {
       logs.set([
         {
+          id: 'log-1',
           serverId: 'server-1',
+          source: 'server-1',
           timestamp: new Date().toISOString(),
           severity: 'info',
           message: 'Connection established',
         },
         {
+          id: 'log-2',
           serverId: 'server-1',
+          source: 'server-1',
           timestamp: new Date().toISOString(),
           severity: 'info',
           message: 'Server started',
@@ -171,8 +196,8 @@ describe('Stores', () => {
 
       applicationState.update((state) => ({
         ...state,
-        serverFilters: {
-          ...state.serverFilters,
+        filters: {
+          ...state.filters,
           searchQuery: 'connection',
         },
       }));
@@ -188,38 +213,45 @@ describe('Stores', () => {
           id: 'server-1',
           name: 'Running Server',
           source: 'client_config',
+          transport: 'stdio',
           installationPath: '/path/1',
           status: {
             state: 'running',
-            pid: 12345,
-            uptime: 100,
-            lastChecked: new Date().toISOString(),
+            startupAttempts: 0,
+            lastStateChange: new Date().toISOString(),
+            crashRecoverable: true,
           },
           configuration: {
-            command: 'node',
-            args: [],
-            env: {},
             autoStart: false,
-            restartOnFailure: false,
+            restartOnCrash: false,
+            maxRestartAttempts: 3,
+            startupTimeout: 30,
+            shutdownTimeout: 10,
           },
+          discoveredAt: new Date().toISOString(),
+          lastSeenAt: new Date().toISOString(),
         },
         {
           id: 'server-2',
           name: 'Stopped Server',
           source: 'client_config',
+          transport: 'stdio',
           installationPath: '/path/2',
           status: {
             state: 'stopped',
-            uptime: 0,
-            lastChecked: new Date().toISOString(),
+            startupAttempts: 0,
+            lastStateChange: new Date().toISOString(),
+            crashRecoverable: true,
           },
           configuration: {
-            command: 'node',
-            args: [],
-            env: {},
             autoStart: false,
-            restartOnFailure: false,
+            restartOnCrash: false,
+            maxRestartAttempts: 3,
+            startupTimeout: 30,
+            shutdownTimeout: 10,
           },
+          discoveredAt: new Date().toISOString(),
+          lastSeenAt: new Date().toISOString(),
         },
       ]);
 
@@ -282,32 +314,32 @@ describe('Stores', () => {
     it('should update user preferences', () => {
       applicationState.update((state) => ({
         ...state,
-        userPreferences: {
-          ...state.userPreferences,
+        preferences: {
+          ...state.preferences,
           theme: 'light',
-          autoRefresh: false,
+          showNotifications: false,
         },
       }));
 
       const state = get(applicationState);
-      expect(state.userPreferences.theme).toBe('light');
-      expect(state.userPreferences.autoRefresh).toBe(false);
+      expect(state.preferences.theme).toBe('light');
+      expect(state.preferences.showNotifications).toBe(false);
     });
 
     it('should update server filters', () => {
       applicationState.update((state) => ({
         ...state,
-        serverFilters: {
+        filters: {
           searchQuery: 'test',
-          selectedSource: 'client_config',
-          selectedStatus: 'running',
+          source: 'client_config',
+          status: 'running',
         },
       }));
 
       const state = get(applicationState);
-      expect(state.serverFilters.searchQuery).toBe('test');
-      expect(state.serverFilters.selectedSource).toBe('client_config');
-      expect(state.serverFilters.selectedStatus).toBe('running');
+      expect(state.filters.searchQuery).toBe('test');
+      expect(state.filters.source).toBe('client_config');
+      expect(state.filters.status).toBe('running');
     });
   });
 });

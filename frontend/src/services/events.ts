@@ -119,7 +119,7 @@ async function handleServerStatusChanged(data: any) {
         const updatedServer = await GetServer(serverId);
         if (updatedServer) {
           console.log('[FRONTEND-EVENT] Updating server in store', updatedServer);
-          updateServer(updatedServer);
+          updateServer(updatedServer as unknown as MCPServer);
           console.log('[FRONTEND-EVENT] Store update complete');
         }
       } catch (error) {
@@ -137,8 +137,10 @@ function handleServerLogEntry(data: any) {
   if (data && data.serverID) {
     const serverId = data.serverID;
     const logEntry: LogEntry = {
+      id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
       severity: data.severity,
+      source: serverId,
       message: data.message,
       serverId: serverId
     };

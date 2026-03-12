@@ -6,6 +6,7 @@ export interface MCPServer {
   name: string;
   version?: string;
   installationPath: string;
+  transport: string;
   status: ServerStatus;
   pid?: number;
   capabilities?: string[];
@@ -14,15 +15,13 @@ export interface MCPServer {
   dependencies?: Dependency[];
   discoveredAt: string;
   lastSeenAt: string;
-  source: 'client_config' | 'extension' | 'filesystem' | 'process';
+  source: string;
 }
 
 export interface ServerStatus {
   state: 'stopped' | 'starting' | 'running' | 'error';
-  uptime?: number;
-  lastChecked?: string;
-  lastStateChange: string;
   startupAttempts: number;
+  lastStateChange: string;
   crashRecoverable: boolean;
   errorMessage?: string;
 }
@@ -45,42 +44,49 @@ export type LogSeverity = 'info' | 'success' | 'warning' | 'error';
 
 export interface Dependency {
   name: string;
-  type: 'runtime' | 'tool' | 'environment' | 'library';
+  type: string;
   requiredVersion?: string;
-  installedVersion?: string;
-  satisfied: boolean;
-  checkCommand?: string;
+  detectedVersion?: string;
+  installationInstructions?: string;
 }
 
 export interface LogEntry {
+  id: string;
   timestamp: string;
-  severity: LogSeverity;
+  severity: string;
+  source: string;
   message: string;
   serverId: string;
+  metadata?: Record<string, any>;
 }
 
 export interface ServerMetrics {
-  uptimeSeconds?: number;
-  memoryUsageMB?: number;
+  serverId: string;
+  uptime: number;
+  memoryBytes?: number;
   requestCount?: number;
-  cpuPercent?: number;
+  timestamp: string;
 }
 
 export interface ApplicationState {
-  userPreferences: UserPreferences;
+  version: string;
+  lastSaved: string;
+  preferences: UserPreferences;
   windowLayout: WindowLayout;
-  serverFilters: ServerFilters;
+  filters: ServerFilters;
+  discoveredServers: string[];
+  monitoredConfigPaths: string[];
+  lastDiscoveryScan: string;
   selectedServerId?: string;
   lastSyncedAt: string;
 }
 
 export interface UserPreferences {
-  theme: 'light' | 'dark' | 'system';
+  theme: string;
+  logRetentionPerServer: number;
   autoStartServers: boolean;
+  minimizeToTray: boolean;
   showNotifications: boolean;
-  logLevel: 'info' | 'warning' | 'error';
-  refreshInterval: number;
-  enableAutoDiscovery: boolean;
 }
 
 export interface WindowLayout {
@@ -89,7 +95,7 @@ export interface WindowLayout {
   x: number;
   y: number;
   maximized: boolean;
-  fullscreen: boolean;
+  logPanelHeight: number;
 }
 
 export interface ServerFilters {
@@ -143,13 +149,14 @@ export const serverUpdates: Writable<Record<string, UpdateInfo>> = writable({});
 
 // Application state store
 export const applicationState: Writable<ApplicationState> = writable({
-  userPreferences: {
+  version: '',
+  lastSaved: '',
+  preferences: {
     theme: 'system',
+    logRetentionPerServer: 1000,
     autoStartServers: false,
+    minimizeToTray: false,
     showNotifications: true,
-    logLevel: 'info',
-    refreshInterval: 5,
-    enableAutoDiscovery: true
   },
   windowLayout: {
     width: 1280,
@@ -157,13 +164,16 @@ export const applicationState: Writable<ApplicationState> = writable({
     x: 0,
     y: 0,
     maximized: false,
-    fullscreen: false
+    logPanelHeight: 200,
   },
-  serverFilters: {
+  filters: {
     status: undefined,
     source: undefined,
     searchQuery: ''
   },
+  discoveredServers: [],
+  monitoredConfigPaths: [],
+  lastDiscoveryScan: '',
   selectedServerId: undefined,
   lastSyncedAt: new Date().toISOString()
 });
@@ -232,8 +242,8 @@ export const filteredLogs = derived(
       if ($selectedSeverity && log.severity !== $selectedSeverity) return false;
 
       // Filter by search query
-      if ($appState.serverFilters.searchQuery) {
-        const query = $appState.serverFilters.searchQuery.toLowerCase();
+      if ($appState.filters.searchQuery) {
+        const query = $appState.filters.searchQuery.toLowerCase();
         if (!log.message.toLowerCase().includes(query)) return false;
       }
 
