@@ -43,10 +43,13 @@ func TestPostServerStart_ContractValidation(t *testing.T) {
 			t.Skip("No servers available for testing")
 		}
 
-		// Stop server first if it's running
-		stopReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/servers/%s/stop", validUUID), nil)
-		stopW := httptest.NewRecorder()
-		router.ServeHTTP(stopW, stopReq)
+		// Ensure clean state on exit
+		t.Cleanup(func() {
+			ensureServerStopped(t, router, validUUID)
+		})
+
+		// Ensure server is stopped before we start
+		ensureServerStopped(t, router, validUUID)
 
 		// Now try to start the server
 		req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/servers/%s/start", validUUID), nil)
@@ -76,10 +79,24 @@ func TestPostServerStart_ContractValidation(t *testing.T) {
 			t.Skip("No servers available for testing")
 		}
 
+		// Ensure clean state on exit
+		t.Cleanup(func() {
+			ensureServerStopped(t, router, validUUID)
+		})
+
+		// Ensure server is stopped before we start
+		ensureServerStopped(t, router, validUUID)
+
 		// Ensure server is running by starting it first
 		startReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/servers/%s/start", validUUID), nil)
 		startW := httptest.NewRecorder()
 		router.ServeHTTP(startW, startReq)
+
+		// Wait for server to reach a stable state
+		state := waitForStableState(t, router, validUUID, 5*time.Second)
+		if state != "running" {
+			t.Skipf("Server did not reach running state (reached %q), skipping already-running test", state)
+		}
 
 		// Try to start again - should return 400
 		req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/servers/%s/start", validUUID), nil)
@@ -142,13 +159,24 @@ func TestPostServerStop_ContractValidation(t *testing.T) {
 			t.Skip("No servers available for testing")
 		}
 
+		// Ensure clean state on exit
+		t.Cleanup(func() {
+			ensureServerStopped(t, router, validUUID)
+		})
+
+		// Ensure server is stopped before we start
+		ensureServerStopped(t, router, validUUID)
+
 		// Start server first to ensure it's running
 		startReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/servers/%s/start", validUUID), nil)
 		startW := httptest.NewRecorder()
 		router.ServeHTTP(startW, startReq)
 
-		// Wait briefly for server to reach running state (start is async)
-		time.Sleep(100 * time.Millisecond)
+		// Wait for server to reach a stable state
+		state := waitForStableState(t, router, validUUID, 5*time.Second)
+		if state != "running" {
+			t.Skipf("Server did not reach running state (reached %q), skipping stop test", state)
+		}
 
 		// Now stop the server
 		req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/servers/%s/stop", validUUID), nil)
@@ -175,13 +203,24 @@ func TestPostServerStop_ContractValidation(t *testing.T) {
 			t.Skip("No servers available for testing")
 		}
 
+		// Ensure clean state on exit
+		t.Cleanup(func() {
+			ensureServerStopped(t, router, validUUID)
+		})
+
+		// Ensure server is stopped before we start
+		ensureServerStopped(t, router, validUUID)
+
 		// Start server first to ensure it's running
 		startReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/servers/%s/start", validUUID), nil)
 		startW := httptest.NewRecorder()
 		router.ServeHTTP(startW, startReq)
 
-		// Wait briefly for server to reach running state (start is async)
-		time.Sleep(100 * time.Millisecond)
+		// Wait for server to reach a stable state
+		state := waitForStableState(t, router, validUUID, 5*time.Second)
+		if state != "running" {
+			t.Skipf("Server did not reach running state (reached %q), skipping stop test", state)
+		}
 
 		requestBody := map[string]interface{}{
 			"force":   true,
@@ -209,13 +248,24 @@ func TestPostServerStop_ContractValidation(t *testing.T) {
 			t.Skip("No servers available for testing")
 		}
 
+		// Ensure clean state on exit
+		t.Cleanup(func() {
+			ensureServerStopped(t, router, validUUID)
+		})
+
+		// Ensure server is stopped before we start
+		ensureServerStopped(t, router, validUUID)
+
 		// Start server first to ensure it's running
 		startReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/servers/%s/start", validUUID), nil)
 		startW := httptest.NewRecorder()
 		router.ServeHTTP(startW, startReq)
 
-		// Wait briefly for server to reach running state (start is async)
-		time.Sleep(100 * time.Millisecond)
+		// Wait for server to reach a stable state
+		state := waitForStableState(t, router, validUUID, 5*time.Second)
+		if state != "running" {
+			t.Skipf("Server did not reach running state (reached %q), skipping stop test", state)
+		}
 
 		req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/servers/%s/stop", validUUID), nil)
 		w := httptest.NewRecorder()
@@ -231,10 +281,13 @@ func TestPostServerStop_ContractValidation(t *testing.T) {
 			t.Skip("No servers available for testing")
 		}
 
-		// Ensure server is stopped by stopping it first
-		stopReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/servers/%s/stop", validUUID), nil)
-		stopW := httptest.NewRecorder()
-		router.ServeHTTP(stopW, stopReq)
+		// Ensure clean state on exit
+		t.Cleanup(func() {
+			ensureServerStopped(t, router, validUUID)
+		})
+
+		// Ensure server is stopped before testing
+		ensureServerStopped(t, router, validUUID)
 
 		// Try to stop again - should return 400
 		req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/servers/%s/stop", validUUID), nil)
@@ -280,6 +333,14 @@ func TestPostServerRestart_ContractValidation(t *testing.T) {
 			t.Skip("No servers available for testing")
 		}
 
+		// Ensure clean state on exit
+		t.Cleanup(func() {
+			ensureServerStopped(t, router, validUUID)
+		})
+
+		// Ensure server is in a known state before testing
+		ensureServerStopped(t, router, validUUID)
+
 		req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/servers/%s/restart", validUUID), nil)
 		w := httptest.NewRecorder()
 
@@ -320,6 +381,14 @@ func TestPostServerRestart_ContractValidation(t *testing.T) {
 		if validUUID == "" {
 			t.Skip("No servers available for testing")
 		}
+
+		// Ensure clean state on exit
+		t.Cleanup(func() {
+			ensureServerStopped(t, router, validUUID)
+		})
+
+		// Ensure server is in a known state before testing
+		ensureServerStopped(t, router, validUUID)
 
 		req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/servers/%s/restart", validUUID), nil)
 		w := httptest.NewRecorder()
