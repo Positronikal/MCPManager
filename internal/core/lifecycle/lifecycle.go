@@ -257,6 +257,11 @@ func (ls *LifecycleService) RestartServer(server *models.MCPServer) error {
 		return fmt.Errorf("server cannot be nil")
 	}
 
+	// Check transport type - stdio servers cannot be restarted directly
+	if server.Transport == models.TransportStdio {
+		return fmt.Errorf("cannot restart stdio transport servers directly; they must be restarted through their MCP client")
+	}
+
 	// Stop the server (graceful with 10s timeout)
 	if err := ls.StopServer(server, false, 10); err != nil {
 		return fmt.Errorf("failed to stop server during restart: %w", err)

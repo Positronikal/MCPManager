@@ -83,6 +83,13 @@
 
   // Handle Restart server action
   async function handleRestart(server: MCPServer) {
+    // Check transport type (stdio servers must be restarted via client)
+    if (server.transport === 'stdio') {
+      stdioInfoServer = server;
+      showStdioInfoModal = true;
+      return;
+    }
+
     try {
       loadingServers.set(server.id, 'restarting');
       loadingServers = loadingServers;
@@ -316,14 +323,24 @@
                     >
                       {getButtonText(server.id, 'stopping', '⏹️ Stop')}
                     </button>
-                    <button
-                      class="btn-action btn-restart"
-                      on:click={() => handleRestart(server)}
-                      disabled={isServerLoading(server.id)}
-                      title="Restart server"
-                    >
-                      {getButtonText(server.id, 'restarting', '🔄 Restart')}
-                    </button>
+                    {#if server.transport === 'stdio'}
+                      <button
+                        class="btn-action btn-restart"
+                        disabled
+                        title="stdio servers must be restarted via the MCP client (e.g., Claude Desktop)"
+                      >
+                        🔄 Restart
+                      </button>
+                    {:else}
+                      <button
+                        class="btn-action btn-restart"
+                        on:click={() => handleRestart(server)}
+                        disabled={isServerLoading(server.id)}
+                        title="Restart server"
+                      >
+                        {getButtonText(server.id, 'restarting', '🔄 Restart')}
+                      </button>
+                    {/if}
                   {/if}
 
                   <!-- Config and Logs buttons (always available) -->

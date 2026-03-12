@@ -357,6 +357,11 @@ func (a *App) RestartServer(serverID string) (*ServerOperationResponse, error) {
 		return nil, fmt.Errorf("server not found: %s", serverID)
 	}
 
+	// Check transport type (stdio servers must be restarted through their client)
+	if server.Transport == models.TransportStdio {
+		return nil, fmt.Errorf("stdio_requires_client: This server uses stdio transport and must be restarted through an MCP client (e.g., Claude Desktop)")
+	}
+
 	// Restart the server
 	if err := a.lifecycleService.RestartServer(server); err != nil {
 		return nil, fmt.Errorf("failed to restart server: %w", err)
