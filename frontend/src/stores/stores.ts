@@ -19,9 +19,11 @@ export interface MCPServer {
 
 export interface ServerStatus {
   state: 'stopped' | 'starting' | 'running' | 'error';
-  uptime: number;
-  lastChecked: string;
+  uptime?: number;
+  lastChecked?: string;
   lastStateChange: string;
+  startupAttempts: number;
+  crashRecoverable: boolean;
   errorMessage?: string;
 }
 

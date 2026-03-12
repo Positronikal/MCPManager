@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
   import { servers, filteredServers, selectedServerId, addNotification } from '../stores/stores';
   import { api } from '../services/api';
   import type { MCPServer } from '../stores/stores';
@@ -26,6 +27,22 @@
   // Client config editor state
   let showClientConfigEditor = false;
   let clientConfigEditorServer: MCPServer | null = null;
+
+  // Tick counter for uptime recalculation (increments every 60s)
+  let uptimeTick = 0;
+  let uptimeInterval: ReturnType<typeof setInterval> | null = null;
+
+  onMount(() => {
+    uptimeInterval = setInterval(() => {
+      uptimeTick++;
+    }, 60000); // Update every 60 seconds
+  });
+
+  onDestroy(() => {
+    if (uptimeInterval) {
+      clearInterval(uptimeInterval);
+    }
+  });
 
   // Note: No need to fetch servers on mount - App.svelte triggers refreshDiscovery()
   // on startup, and the backend emits servers:initial event which populates the store
@@ -200,6 +217,22 @@
     }
   }
 
+  // Calculate uptime in seconds from lastStateChange for running servers
+  function calculateUptime(server: MCPServer, _tick: number): number {
+    if (server.status.state !== 'running' || !server.status.lastStateChange) {
+      return 0;
+    }
+
+    const startTime = new Date(server.status.lastStateChange).getTime();
+    if (isNaN(startTime)) {
+      return 0;
+    }
+
+    const now = Date.now();
+    const uptimeSeconds = Math.floor((now - startTime) / 1000);
+    return uptimeSeconds > 0 ? uptimeSeconds : 0;
+  }
+
   // Get status text with proper capitalization
   function getStatusText(state: string): string {
     return state.charAt(0).toUpperCase() + state.slice(1);
@@ -289,7 +322,7 @@
               <!-- Uptime -->
               <td class="col-uptime">
                 <span class="text-secondary">
-                  {formatUptime(server.status.uptime || 0)}
+                  {formatUptime(calculateUptime(server, uptimeTick))}
                 </span>
               </td>
 
