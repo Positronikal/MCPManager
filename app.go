@@ -205,6 +205,12 @@ type ListServersResponse struct {
 	LastDiscovery string             `json:"lastDiscovery"`
 }
 
+// GetVersion returns the application version set at build time via ldflags.
+// Returns "dev" when running in development mode (wails dev).
+func (a *App) GetVersion() string {
+	return appVersion
+}
+
 // ListServers returns all discovered servers
 func (a *App) ListServers() (*ListServersResponse, error) {
 	slog.Info("ListServers called")

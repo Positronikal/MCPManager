@@ -1,5 +1,17 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { GetVersion } from '../../wailsjs/go/main/App';
+
   let activeTab = 'quickstart'; // quickstart, shortcuts, about
+  let appVersion = '';
+
+  onMount(async () => {
+    try {
+      appVersion = await GetVersion();
+    } catch (err) {
+      appVersion = 'unknown';
+    }
+  });
 
   function setTab(tab: string) {
     activeTab = tab;
@@ -162,7 +174,7 @@
         <div class="about-header">
           <div class="app-logo">🖥️</div>
           <h3>MCP Manager</h3>
-          <p class="version">Version 0.1.0</p>
+          <p class="version">Version {appVersion || '...'}</p>
         </div>
 
         <h4>About This Application</h4>

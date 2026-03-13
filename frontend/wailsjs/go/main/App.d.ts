@@ -33,6 +33,8 @@ export function GetServices():Promise<main.ServicesResponse>;
 
 export function GetUpdates(arg1:string):Promise<dependencies.UpdateInfo>;
 
+export function GetVersion():Promise<string>;
+
 export function LaunchShell():Promise<main.LaunchShellResponse>;
 
 export function ListServers():Promise<main.ListServersResponse>;

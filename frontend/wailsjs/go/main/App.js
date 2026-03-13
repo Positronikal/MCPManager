@@ -58,6 +58,10 @@ export function GetUpdates(arg1) {
   return window['go']['main']['App']['GetUpdates'](arg1);
 }
 
+export function GetVersion() {
+  return window['go']['main']['App']['GetVersion']();
+}
+
 export function LaunchShell() {
   return window['go']['main']['App']['LaunchShell']();
 }

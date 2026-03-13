@@ -1,6 +1,18 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { selectedServerId, servers, addNotification, activeView, hasNetworkTransportServers } from '../stores/stores';
   import { BrowserOpenURL } from '../../wailsjs/runtime/runtime';
+  import { GetVersion } from '../../wailsjs/go/main/App';
+
+  let appVersion = '';
+
+  onMount(async () => {
+    try {
+      appVersion = await GetVersion();
+    } catch (err) {
+      appVersion = 'unknown';
+    }
+  });
 
   function setView(view: string) {
     activeView.set(view);
@@ -103,7 +115,7 @@
   </div>
 
   <div class="sidebar-footer">
-    <p class="text-muted" style="font-size: var(--font-size-xs);">v0.1.0</p>
+    <p class="text-muted" style="font-size: var(--font-size-xs);">{appVersion || '...'}</p>
   </div>
 </nav>
 
