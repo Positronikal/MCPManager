@@ -190,7 +190,7 @@ export const isConnected: Writable<boolean> = writable(false);
 export const lastEventId: Writable<string | null> = writable(null);
 
 // Active view for main content area
-export const activeView: Writable<string> = writable('servers'); // servers, netstat, shell, explorer, services, help
+export const activeView: Writable<string> = writable('servers'); // servers, netstat, shell, explorer, help
 
 // Derived store for selected server
 export const selectedServer = derived(
@@ -256,6 +256,15 @@ export const filteredLogs = derived(
 export const runningServers = derived(
   servers,
   $servers => $servers.filter(s => s.status.state === 'running')
+);
+
+// Derived store: true when at least one HTTP/SSE transport server exists
+export const hasNetworkTransportServers = derived(
+  servers,
+  $servers => $servers.some(s =>
+    s.transport === 'sse' ||
+    s.transport === 'http'
+  )
 );
 
 // Helper functions for notifications

@@ -178,7 +178,7 @@
           <li>Real-time server status monitoring</li>
           <li>Live log streaming with filtering</li>
           <li>Configuration management with validation</li>
-          <li>System utilities (netstat, shell, explorer, services)</li>
+          <li>System utilities (netstat, shell, explorer)</li>
           <li>Keyboard shortcuts for efficient workflow</li>
           <li>Cross-platform support (Windows, macOS, Linux)</li>
         </ul>

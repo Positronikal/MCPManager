@@ -6,9 +6,9 @@
   import NetstatView from './components/NetstatView.svelte';
   import ShellView from './components/ShellView.svelte';
   import ExplorerView from './components/ExplorerView.svelte';
-  import ServicesView from './components/ServicesView.svelte';
   import HelpView from './components/HelpView.svelte';
-  import { isConnected, isDiscovering, notifications, activeView, selectedServerId, servers, applicationState } from './stores/stores';
+  import { isConnected, isDiscovering, notifications, activeView, selectedServerId, servers, applicationState, hasNetworkTransportServers, addNotification } from './stores/stores';
+  import { get } from 'svelte/store';
   import { api } from './services/api';
   import { setupWailsEvents, cleanupWailsEvents } from './services/events';
   import { onMount, onDestroy } from 'svelte';
@@ -63,7 +63,7 @@
     if (!event.ctrlKey) return;
 
     // Prevent default browser shortcuts
-    const preventKeys = ['s', 'x', 'q', 'h', '1', '2', '3', '4', '5', '6'];
+    const preventKeys = ['s', 'x', 'q', 'h', '1', '2', '3', '4', '5'];
     if (preventKeys.includes(event.key.toLowerCase())) {
       event.preventDefault();
     }
@@ -74,6 +74,10 @@
         activeView.set('servers');
         return;
       case '2':
+        if (!get(hasNetworkTransportServers)) {
+          addNotification('info', 'Network monitoring applies to HTTP/SSE transport servers. All current servers use stdio transport.');
+          return;
+        }
         activeView.set('netstat');
         return;
       case '3':
@@ -83,9 +87,6 @@
         activeView.set('explorer');
         return;
       case '5':
-        activeView.set('services');
-        return;
-      case '6':
       case 'h':
         activeView.set('help');
         return;
@@ -253,8 +254,6 @@
         <ShellView />
       {:else if $activeView === 'explorer'}
         <ExplorerView />
-      {:else if $activeView === 'services'}
-        <ServicesView />
       {:else if $activeView === 'help'}
         <HelpView />
       {:else}

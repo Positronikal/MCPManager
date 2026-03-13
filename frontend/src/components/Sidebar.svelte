@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { selectedServerId, servers, addNotification, activeView } from '../stores/stores';
+  import { selectedServerId, servers, addNotification, activeView, hasNetworkTransportServers } from '../stores/stores';
   import { BrowserOpenURL } from '../../wailsjs/runtime/runtime';
 
   function setView(view: string) {
     activeView.set(view);
   }
 
-  // FR-032: Open server installation directory in system file explorer
+  // Open server installation directory in system file explorer
   async function openExplorer() {
     const selectedServer = $servers.find(s => s.id === $selectedServerId);
     if (selectedServer) {
@@ -24,34 +24,29 @@
     }
   }
 
-  // FR-031: Open system shell/terminal
+  // Open system shell/terminal
   function openShell() {
     addNotification('info', 'Shell utility: Use your system terminal');
     // Note: Opening a system terminal varies by OS and requires platform-specific commands
     // This would be better implemented as a backend API method
   }
 
-  // FR-030: Show network connections
   function showNetstat() {
+    if (!$hasNetworkTransportServers) {
+      addNotification('info', 'Network monitoring applies to HTTP/SSE transport servers. All current servers use stdio transport.');
+      return;
+    }
     setView('netstat');
   }
 
-  // FR-031: Show shell launcher
   function showShell() {
     setView('shell');
   }
 
-  // FR-032: Show explorer view
   function showExplorer() {
     setView('explorer');
   }
 
-  // FR-033: Show system services
-  function showServices() {
-    setView('services');
-  }
-
-  // FR-034: Show help and documentation
   function showHelp() {
     setView('help');
   }
@@ -71,36 +66,35 @@
     </li>
   </ul>
 
-  <!-- FR-030-034: Utility functions -->
+  <!-- Utility functions -->
   <div class="utilities-section">
     <div class="section-label">Utilities</div>
     <ul class="nav-menu">
-      <li>
-        <button on:click={showNetstat} title="FR-030: View network connections">
+      <li class:active={$activeView === 'netstat'} class:disabled={!$hasNetworkTransportServers}>
+        <button
+          on:click={showNetstat}
+          title={$hasNetworkTransportServers
+            ? 'View HTTP/SSE network connections'
+            : 'Network monitoring unavailable — no HTTP/SSE servers discovered'}
+        >
           <span class="nav-icon">🌐</span>
           <span class="nav-label">Netstat</span>
         </button>
       </li>
-      <li>
-        <button on:click={showShell} title="FR-031: Shell launcher">
+      <li class:active={$activeView === 'shell'}>
+        <button on:click={showShell} title="Shell launcher">
           <span class="nav-icon">💻</span>
           <span class="nav-label">Shell</span>
         </button>
       </li>
-      <li>
-        <button on:click={showExplorer} title="FR-032: Open server directories">
+      <li class:active={$activeView === 'explorer'}>
+        <button on:click={showExplorer} title="Open server directories">
           <span class="nav-icon">📁</span>
           <span class="nav-label">Explorer</span>
         </button>
       </li>
-      <li>
-        <button on:click={showServices} title="FR-033: View system services">
-          <span class="nav-icon">🔧</span>
-          <span class="nav-label">Services</span>
-        </button>
-      </li>
-      <li>
-        <button on:click={showHelp} title="FR-034: Help and documentation">
+      <li class:active={$activeView === 'help'}>
+        <button on:click={showHelp} title="Help and documentation">
           <span class="nav-icon">❓</span>
           <span class="nav-label">Help</span>
         </button>
@@ -169,6 +163,16 @@
     background-color: var(--bg-tertiary);
     border-left-color: var(--accent-primary);
     color: var(--text-primary);
+  }
+
+  .nav-menu li.disabled button {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .nav-menu li.disabled button:hover {
+    background-color: transparent;
+    color: var(--text-secondary);
   }
 
   .nav-icon {
