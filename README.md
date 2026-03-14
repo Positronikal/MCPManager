@@ -3,7 +3,7 @@
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
 ![Go Version](https://img.shields.io/badge/go-%3E%3D1.21-blue)
-![Status](https://img.shields.io/badge/status-v1.0--rc-green)
+![Status](https://img.shields.io/badge/status-v1.3.1-green)
 
 **A cross-platform desktop application for managing Model Context Protocol servers**
 
@@ -102,7 +102,7 @@ See [USING.md](./USING.md) for more details on the verification workflow.
 - ✅ **Cross-Platform**: Windows, macOS, Linux
 - ✅ **Transport Support**: stdio, HTTP, SSE
 - ✅ **Test Coverage**: All tests passing (unit, contract, integration, performance)
-- 📦 **Version**: v1.0.0-rc (Release Candidate)
+- 📦 **Version**: v1.3.1
 - 📚 **Documentation**: Complete
 
 ## Community & Support
@@ -111,7 +111,7 @@ See [USING.md](./USING.md) for more details on the verification workflow.
 - 🐛 **Bug Reports**: See [BUGS.md](./BUGS.md) for bug tracking and reporting guidelines
 - 🔒 **Security**: See [SECURITY.md](./SECURITY.md) for vulnerability reporting procedures
 - 🤝 **Contributing**: See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines
-- 📋 **Specifications**: See [specs/](./specs) for feature specifications and implementation plans
+
 
 ## Adherence to Standards
 
@@ -122,7 +122,6 @@ This project adheres to the [Positronikal Coding Standards](https://github.com/p
 This project follows **Go and Wails framework conventions** where they provide better tooling support and developer experience. While we maintain compatibility with Positronikal standards for documentation and security practices, the directory structure reflects idiomatic Go project layout and Wails requirements:
 
 ### Go/Wails Conventions Used
-- **`cmd/`**: Application entry points (Go standard)
 - **`internal/`**: Private application code (Go standard)
 - **`pkg/`**: Public library code (Go standard)
 - **`tests/`**: Test files and fixtures (Go convention - note the plural)
@@ -137,8 +136,6 @@ This project follows **Go and Wails framework conventions** where they provide b
 - **`ref/`**: Reference materials and future user manual content
 
 ### Special Directories
-- **`.specify/`**: Spec Kit framework for specification-driven development
-- **`specs/`**: Feature specifications and implementation plans
 - **`.claude/`**: Claude Code configuration and slash commands
 - **`.github/`**: GitHub Actions workflows and configuration
 
@@ -149,10 +146,6 @@ This hybrid approach allows the project to benefit from Go's excellent tooling (
 The following directories and files comprise the MCP Manager repository:
 
 ### Go Application Structure
-
-**[cmd/](./cmd 'cmd/')**
-- Application entry points and command-line interfaces
-- `mcpmanager/` - Main application entry point
 
 **[internal/](./internal 'internal/')**
 - Private application code (not importable by other projects)
@@ -192,10 +185,6 @@ The following directories and files comprise the MCP Manager repository:
 **[docs/](./docs 'docs/')**
 - Development documentation for understanding and maintaining the project
 
-**[specs/](./specs 'specs/')**
-- Feature specifications using Spec Kit methodology
-- `001-mcp-manager-specification/` - Main feature spec with requirements, plans, and tasks
-
 **[ref/](./ref 'ref/')**
 - Reference materials and external documentation
 
@@ -210,12 +199,6 @@ The following directories and files comprise the MCP Manager repository:
 - Build scripts, automation tools, and helper utilities
 
 ### Special Directories
-
-**[.specify/](./.specify '.specify/')**
-- Spec Kit framework for specification-driven development
-- `memory/` - Project constitution and long-term memory
-- `templates/` - Specification and plan templates
-- `scripts/` - Automation for feature management
 
 **[.claude/](./.claude '.claude/')**
 - Claude Code configuration and custom slash commands
@@ -271,12 +254,9 @@ The following directories and files comprise the MCP Manager repository:
 **[docs/PACKAGING.md](./docs/PACKAGING.md 'docs/PACKAGING.md')**
 - Production build and packaging instructions (for maintainers)
 
-**[docs/CLAUDE.md](./docs/CLAUDE.md 'docs/CLAUDE.md')**
-- Guidance for Claude Code when working with this repository (for AI-assisted development)
-
 **[README.md](./README.md 'README.md')**
 - This document - project overview and navigation
 
 ---
 
-*Last Updated: 2025-11-14*
+*Last Updated: 2026-03-14*

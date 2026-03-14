@@ -48,16 +48,10 @@ These are intentional design decisions per specifications, not bugs:
    - Only one MCP Manager instance per machine
    - Second launch shows existing window
 
-4. **UI Real-Time Updates** (FR-005, FR-047)
-   - Currently, UI table requires manual refresh after lifecycle operations
-   - Backend cache updates correctly, but UI doesn't subscribe to state change events
-   - This is a missing feature implementation, not a bug
-   - Should be implemented as part of normal spec-kit development workflow
-
 ---
 
 ## Contact
 
 - **Security Issues**: See SECURITY.md for private disclosure
 - **General Bugs**: GitHub Issues (this file guides reporting)
-- **Feature Requests**: specs/ directory (add new spec-kit feature)
+- **Feature Requests**: GitHub Issues

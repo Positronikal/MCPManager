@@ -1,6 +1,6 @@
 # Authors
 - Hoyt Harness (hoyt.harness@gmail.com)
-- Claude AI (Sonnet 4.5)
+- Claude AI (Anthropic)
 
 Local Variables:\
 coding: UTF-8\

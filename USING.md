@@ -344,8 +344,8 @@ go mod download
 
 ## Additional Resources
 
-- **Developer Documentation**: See [docs/](./docs) directory (Doxygen-generated after completion)
-- **Feature Specifications**: See [specs/](./specs) for detailed requirements
+- **Developer Documentation**: See [docs/](./docs) directory for Doxygen-generated API documentation
+- **Specification History**: This project was built using [Spec Kit](https://github.com/github/spec-kit) methodology. The original specifications are archived in `etc/specs_20251113.7z`. The `.specify/` directory contains the inert spec-kit framework and project constitution used during initial development.
 - **Bug Reporting**: See [BUGS.md](./BUGS.md)
 - **Security**: See [SECURITY.md](./SECURITY.md)
 - **Contributing**: See [CONTRIBUTING.md](./CONTRIBUTING.md)
