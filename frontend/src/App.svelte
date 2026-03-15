@@ -7,13 +7,16 @@
   import ShellView from './components/ShellView.svelte';
   import ExplorerView from './components/ExplorerView.svelte';
   import HelpView from './components/HelpView.svelte';
-  import { isConnected, isDiscovering, notifications, activeView, selectedServerId, servers, applicationState, hasNetworkTransportServers, addNotification } from './stores/stores';
+  import { isConnected, isDiscovering, notifications, activeView, selectedServerId, servers, applicationState, hasNetworkTransportServers, addNotification, requestConfigEditor } from './stores/stores';
   import { get } from 'svelte/store';
   import { api } from './services/api';
   import { setupWailsEvents, cleanupWailsEvents } from './services/events';
+  import { EventsOn } from '../wailsjs/runtime/runtime';
   import { onMount, onDestroy } from 'svelte';
 
   let logPanelHeight = 200; // Default 200px per FR-020
+  let logPanelVisible = true;
+  let savedLogPanelHeight = 200;
   let isResizing = false;
   let startY = 0;
   let startHeight = 0;
@@ -26,7 +29,12 @@
     isConnected.set(true);
     refreshDiscovery();
 
-    // FR-046: Setup keyboard shortcuts
+    // Register menu:action event from native menu bar
+    EventsOn('menu:action', (action: string) => {
+      handleMenuAction(action);
+    });
+
+    // FR-046: Setup keyboard shortcuts (simplified — menu accelerators cover most keys)
     window.addEventListener('keydown', handleKeyboardShortcut);
 
     // T-E022: Load persisted window state
@@ -50,72 +58,101 @@
     }
   });
 
-  // FR-046: Handle keyboard shortcuts (T-E018)
-  function handleKeyboardShortcut(event: KeyboardEvent) {
-    // F5 or Ctrl+R: Refresh discovery
-    if (event.key === 'F5' || (event.ctrlKey && event.key === 'r')) {
-      event.preventDefault();
-      refreshDiscovery();
-      return;
-    }
-
-    // All other shortcuts require Ctrl key
-    if (!event.ctrlKey) return;
-
-    // Prevent default browser shortcuts
-    const preventKeys = ['s', 'x', 'q', 'h', '1', '2', '3', '4', '5'];
-    if (preventKeys.includes(event.key.toLowerCase())) {
-      event.preventDefault();
-    }
-
-    // View switching shortcuts
-    switch (event.key) {
-      case '1':
+  // Handle native menu bar actions forwarded via "menu:action" event
+  function handleMenuAction(action: string) {
+    switch (action) {
+      case 'refresh-discovery':
+        refreshDiscovery();
+        break;
+      case 'view-servers':
         activeView.set('servers');
-        return;
-      case '2':
+        break;
+      case 'view-netstat':
         if (!get(hasNetworkTransportServers)) {
           addNotification('info', 'Network monitoring applies to HTTP/SSE transport servers. All current servers use stdio transport.');
           return;
         }
         activeView.set('netstat');
-        return;
-      case '3':
+        break;
+      case 'view-shell':
         activeView.set('shell');
-        return;
-      case '4':
+        break;
+      case 'view-explorer':
         activeView.set('explorer');
-        return;
-      case '5':
-      case 'h':
+        break;
+      case 'view-help':
         activeView.set('help');
-        return;
+        break;
+      case 'toggle-log-panel':
+        toggleLogPanel();
+        break;
+      case 'server-start':
+      case 'server-stop':
+      case 'server-restart':
+      case 'server-view-config':
+      case 'server-open-directory':
+        handleServerMenuAction(action);
+        break;
+    }
+  }
+
+  // Toggle log panel visibility, restoring previous height on re-open
+  function toggleLogPanel() {
+    if (logPanelVisible) {
+      savedLogPanelHeight = logPanelHeight;
+      logPanelVisible = false;
+    } else {
+      logPanelHeight = savedLogPanelHeight;
+      logPanelVisible = true;
+    }
+  }
+
+  // Handle server-scoped menu actions; requires a server to be selected
+  function handleServerMenuAction(action: string) {
+    const currentServerId = get(selectedServerId);
+    if (!currentServerId) {
+      addNotification('warning', 'No server selected. Select a server from the table first.');
+      return;
     }
 
-    // Server action shortcuts (only when a server is selected)
-    if ($selectedServerId) {
-      const selectedServer = $servers.find(s => s.id === $selectedServerId);
-      if (!selectedServer) return;
+    const selectedSrv = get(servers).find(s => s.id === currentServerId);
+    if (!selectedSrv) return;
 
-      switch (event.key.toLowerCase()) {
-        case 's':
-          // Start server (only if stopped)
-          if (selectedServer.status.state === 'stopped' || selectedServer.status.state === 'error') {
-            addNotification('info', `Starting ${selectedServer.name} via keyboard shortcut`);
-            // Would trigger start action
-          } else {
-            addNotification('warning', `${selectedServer.name} is already ${selectedServer.status.state}`);
-          }
-          break;
-        case 'x':
-          // Stop server (only if running)
-          if (selectedServer.status.state === 'running') {
-            addNotification('info', `Use Stop button to stop ${selectedServer.name}`);
-          } else {
-            addNotification('warning', `${selectedServer.name} is not running`);
-          }
-          break;
-      }
+    switch (action) {
+      case 'server-start':
+        api.lifecycle.startServer(currentServerId)
+          .then(() => addNotification('success', `Starting ${selectedSrv.name}`))
+          .catch((err: any) => addNotification('error', `Failed to start: ${err}`));
+        break;
+      case 'server-stop':
+        api.lifecycle.stopServer(currentServerId, { force: false, timeout: 30 })
+          .then(() => addNotification('success', `Stopping ${selectedSrv.name}`))
+          .catch((err: any) => addNotification('error', `Failed to stop: ${err}`));
+        break;
+      case 'server-restart':
+        api.lifecycle.restartServer(currentServerId)
+          .then(() => addNotification('success', `Restarting ${selectedSrv.name}`))
+          .catch((err: any) => addNotification('error', `Failed to restart: ${err}`));
+        break;
+      case 'server-view-config':
+        // Switch to servers view so ServerTable is mounted, then request editor
+        activeView.set('servers');
+        requestConfigEditor.set(currentServerId);
+        break;
+      case 'server-open-directory':
+        api.utilities.openExplorer(currentServerId)
+          .then(() => addNotification('success', `Opened directory for ${selectedSrv.name}`))
+          .catch((err: any) => addNotification('error', `Failed to open directory: ${err}`));
+        break;
+    }
+  }
+
+  // FR-046: Keyboard shortcuts — menu accelerators handle most keys;
+  // Ctrl+R is kept as a secondary refresh shortcut (not in menu, no conflict).
+  function handleKeyboardShortcut(event: KeyboardEvent) {
+    if (event.ctrlKey && event.key === 'r') {
+      event.preventDefault();
+      refreshDiscovery();
     }
   }
 
@@ -263,6 +300,7 @@
   </div>
 
   <!-- Resizable log viewer -->
+  {#if logPanelVisible}
   <div class="log-panel-container" style="height: {logPanelHeight}px;">
     <div
       class="resize-handle"
@@ -273,6 +311,7 @@
     ></div>
     <LogViewer />
   </div>
+  {/if}
 
   <!-- Notification toast container -->
   {#if $notifications.length > 0}

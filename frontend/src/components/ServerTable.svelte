@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { servers, filteredServers, selectedServerId, addNotification } from '../stores/stores';
+  import { servers, filteredServers, selectedServerId, addNotification, requestConfigEditor } from '../stores/stores';
   import { api } from '../services/api';
   import type { MCPServer } from '../stores/stores';
   import ConfigurationEditor from './ConfigurationEditor.svelte';
@@ -137,6 +137,13 @@
     configEditorServerName = null;
   }
 
+  // Open config editor when requested via menu action (set by App.svelte)
+  $: if ($requestConfigEditor) {
+    const srv = $servers.find(s => s.id === $requestConfigEditor);
+    if (srv) openConfig(srv);
+    requestConfigEditor.set(null);
+  }
+
   // Handle opening detailed logs view
   function openLogs(server: MCPServer) {
     selectedServerId.set(server.id);
@@ -269,7 +276,10 @@
         </thead>
         <tbody>
           {#each $filteredServers as server (server.id)}
-            <tr class:selected={$selectedServerId === server.id}>
+            <tr
+              class:selected={$selectedServerId === server.id}
+              on:click={() => selectedServerId.set(server.id)}
+            >
               <!-- Status Indicator -->
               <td class="col-status">
                 <div class="status-cell">
@@ -511,6 +521,7 @@
   }
 
   .server-table tbody tr {
+    cursor: pointer;
     transition: background-color var(--transition-fast);
   }
 

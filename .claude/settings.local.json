@@ -39,7 +39,8 @@
       "Bash(git show:*)",
       "Bash(npm run check:*)",
       "Bash(wails dev:*)",
-      "Bash(cd frontend:*)"
+      "Bash(cd frontend:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

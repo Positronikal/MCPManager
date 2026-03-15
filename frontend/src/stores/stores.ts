@@ -192,6 +192,9 @@ export const lastEventId: Writable<string | null> = writable(null);
 // Active view for main content area
 export const activeView: Writable<string> = writable('servers'); // servers, netstat, shell, explorer, help
 
+// Triggers config editor in ServerTable for the given server ID; reset to null after handling
+export const requestConfigEditor: Writable<string | null> = writable(null);
+
 // Derived store for selected server
 export const selectedServer = derived(
   [servers, selectedServerId],

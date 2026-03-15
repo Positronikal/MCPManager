@@ -117,16 +117,58 @@
         <table class="shortcuts-table">
           <tbody>
             <tr>
-              <td><kbd>F5</kbd> or <kbd>Ctrl</kbd> + <kbd>R</kbd></td>
+              <td><kbd>F5</kbd></td>
               <td>Refresh server discovery</td>
             </tr>
             <tr>
-              <td><kbd>Ctrl</kbd> + <kbd>H</kbd></td>
-              <td>Show keyboard shortcuts help</td>
+              <td><kbd>Ctrl</kbd> + <kbd>Q</kbd></td>
+              <td>Exit application</td>
             </tr>
             <tr>
-              <td><kbd>Esc</kbd></td>
-              <td>Close modals and dialogs</td>
+              <td><kbd>Ctrl</kbd> + <kbd>1</kbd></td>
+              <td>Servers view</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd> + <kbd>2</kbd></td>
+              <td>Netstat view</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd> + <kbd>3</kbd></td>
+              <td>Shell view</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd> + <kbd>4</kbd></td>
+              <td>Explorer view</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd> + <kbd>5</kbd></td>
+              <td>Help view</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd> + <kbd>L</kbd></td>
+              <td>Toggle log panel</td>
+            </tr>
+            <tr>
+              <td><kbd>F11</kbd></td>
+              <td>Full screen</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>Server Shortcuts</h4>
+        <table class="shortcuts-table">
+          <tbody>
+            <tr>
+              <td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></td>
+              <td>Start selected server</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>X</kbd></td>
+              <td>Stop selected server</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd></td>
+              <td>Restart selected server</td>
             </tr>
           </tbody>
         </table>

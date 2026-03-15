@@ -156,6 +156,13 @@ export const appStateAPI = {
   }
 };
 
+// Utilities API
+export const utilitiesAPI = {
+  async openExplorer(serverId: string): Promise<{ success: boolean; message: string }> {
+    return await WailsApp.OpenExplorer(serverId) as any;
+  }
+};
+
 // Export all APIs
 export const api = {
   discovery: discoveryAPI,
@@ -163,7 +170,8 @@ export const api = {
   config: configAPI,
   monitoring: monitoringAPI,
   dependencies: dependenciesAPI,
-  appState: appStateAPI
+  appState: appStateAPI,
+  utilities: utilitiesAPI
 };
 
 export default api;
