@@ -66,7 +66,7 @@
 
 <nav class="sidebar">
   <div class="sidebar-header">
-    <h2>MCP Manager</h2>
+    <h2>Views</h2>
   </div>
 
   <ul class="nav-menu">
@@ -78,9 +78,9 @@
     </li>
   </ul>
 
-  <!-- Utility functions -->
-  <div class="utilities-section">
-    <div class="section-label">Utilities</div>
+  <!-- Diagnostics section -->
+  <div class="diagnostics-section">
+    <div class="section-label">Diagnostics</div>
     <ul class="nav-menu">
       <li class:active={$activeView === 'netstat'} class:disabled={!$hasNetworkTransportServers}>
         <button
@@ -93,6 +93,13 @@
           <span class="nav-label">Netstat</span>
         </button>
       </li>
+    </ul>
+  </div>
+
+  <!-- Utility functions -->
+  <div class="utilities-section">
+    <div class="section-label">Utilities</div>
+    <ul class="nav-menu">
       <li class:active={$activeView === 'shell'}>
         <button on:click={showShell} title="Shell launcher">
           <span class="nav-icon">💻</span>
@@ -105,6 +112,13 @@
           <span class="nav-label">Explorer</span>
         </button>
       </li>
+    </ul>
+  </div>
+
+  <!-- Help section — separated from functional categories -->
+  <div class="help-section">
+    <hr class="help-separator" />
+    <ul class="nav-menu">
       <li class:active={$activeView === 'help'}>
         <button on:click={showHelp} title="Help and documentation">
           <span class="nav-icon">❓</span>
@@ -196,11 +210,27 @@
     font-weight: 500;
   }
 
+  .diagnostics-section {
+    flex: 0 0 auto;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+  }
+
   .utilities-section {
     flex: 0 0 auto;
     margin-top: auto;
     padding-top: var(--spacing-md);
     border-top: 1px solid var(--border-color);
+  }
+
+  .help-section {
+    flex: 0 0 auto;
+  }
+
+  .help-separator {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: var(--spacing-md) var(--spacing-lg);
   }
 
   .section-label {
